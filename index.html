@@ -32,6 +32,7 @@
             cursor: crosshair;
         }
         
+        /* HUD Styles */
         .hud-header-tag { 
             position: absolute; top: -45px; left: 4%; right: 4%;
             display: flex; justify-content: space-between; align-items: center;
@@ -49,6 +50,7 @@
         .stat-yellow { color: var(--warning-gold); }
         .stat-blue { color: var(--primary-blue); }
 
+        /* Overlay Systems */
         #mainOverlay {
             position: absolute; top: 10px; left: 4%; right: 4%; bottom: 80px;
             background: rgba(10, 10, 10, 0.95); border: 2px solid var(--primary-blue); border-radius: 20px;
@@ -77,6 +79,7 @@
         .correct { color: var(--success-green); background: rgba(39, 174, 96, 0.1); }
         .wrong { color: var(--emergency-red); background: rgba(255, 62, 62, 0.1); }
 
+        /* Form Inputs */
         .form-group { margin-bottom: 15px; text-align: left; width: 100%; }
         .form-group label { display: block; font-size: 10px; color: var(--primary-blue); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .form-group input, .form-group select { 
@@ -84,6 +87,7 @@
             background: #111; color: white; box-sizing: border-box; font-size: 16px;
         }
 
+        /* Briefing Siren Visual */
         .ambo-avatar { width: 50px; height: 80px; margin: 0 auto 15px; position: relative; background: #fff; border-radius: 4px; border: 2px solid #ccc; overflow: visible;}
         .ambo-avatar::after { content: ''; position: absolute; top: 30px; left: 0; width: 100%; height: 12px; background: var(--emergency-red); }
         .siren-light {
@@ -202,7 +206,7 @@
 
     const questions = [
         { q: "Which URL is used to access the O-CIS portal?", a: ["hospitalportal.stluke.com.ph:3031", "10.10.60.95:8081/login", "portal.stlukes.com.ph", "ocis.stlukes.com.ph"], correct: 2 },
-        { q: "Select which tab for Patient Full Name/DOB during registration?", a: ["Demographics", "Supplemental", "Visit", "Clinical"], correct: 0 },
+        { q: "Select which tab for Patient Full Name/DOB during registration?", a: ["Supplemental", "Demographics", "Visit", "Clinical"], correct: 1 },
         { q: "Tick which option for critical patients to be admitted faster?", a: ["Licensed Census", "Non-Census", "Express Registration", "VIP"], correct: 2 },
         { q: "What message appears if 'Search' finds no record?", a: ["Entry Not Found", "No Results Found", "User Unknown", "Create New"], correct: 1 },
         { q: "Which unit should be selected for ED in QC during registration?", a: ["QC-ER", "QC-EMERGENCY", "QC-ED", "QC-TRIAGE"], correct: 2 },
@@ -229,7 +233,7 @@
         { q: "Required printout for CSS department claiming?", a: ["Orders/Charges screenshot", "Patient ID", "Physician Order", "Admission form"], correct: 0 },
         { q: "Requirement for Discharge Diagnosis in legal docs?", a: ["Physician Sign", "ICD10 code", "Time", "Patient PIN"], correct: 1 },
         { q: "Order that stops further entries in patient chart?", a: ["Discharge Patient", "For Billing Discharge", "Ready for Billing", "Stop All Orders"], correct: 2 },
-        { q: "Request type unit for replacement of busted lights?", a: ["FME-Electrical Engineering", "BMED", "Housekeeping", "IT Support"], correct: 0 },
+        { q: "Request type unit for replacement of busted lights in Patient Flow?", a: ["FME-Electrical Engineering", "BMED", "Housekeeping", "IT Support"], correct: 0 },
         { q: "Document automatically printed after discharge visit has been performed?", a: ["Pharmacy Slip", "GATE PASS", "Billing Statement", "Clinical Summary"], correct: 1 }
     ];
 

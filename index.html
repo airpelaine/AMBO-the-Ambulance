@@ -1,133 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AMBO - Emergency Care Mission</title>
     <style>
+        :root {
+            --primary-blue: #00d4ff;
+            --emergency-red: #ff3e3e;
+            --warning-gold: #ffcc00;
+            --success-green: #27ae60;
+            --bg-dark: #0f0f0f;
+        }
+
         body { 
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; margin: 0; background: #0f0f0f; 
-            font-family: 'Segoe UI', sans-serif; color: white; overflow: hidden;
+            height: 100vh; margin: 0; background: var(--bg-dark); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: white; overflow: hidden;
             touch-action: none;
         }
-        .container { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; }
-        canvas { background: #222; border: 4px solid #444; border-radius: 12px; width: 95%; height: auto; box-shadow: 0 0 30px rgba(0,212,255,0.3); cursor: grab; }
-        
-        .hud-top-left { position: absolute; top: -60px; left: 10px; font-size: 11px; color: #ff3e3e; font-weight: bold; }
-        .hud-top-center { position: absolute; top: -60px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #ffcc00; font-weight: bold; }
-        .hud-top-right { position: absolute; top: -60px; right: 10px; font-size: 11px; color: #00d4ff; font-weight: bold; }
+
+        .container { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 420px; }
+
+        canvas { 
+            background: #1a1a1a; 
+            border: 3px solid #333; 
+            border-radius: 16px; 
+            width: 92%; 
+            height: auto; 
+            box-shadow: 0 0 40px rgba(0,212,255,0.15); 
+            cursor: crosshair;
+        }
         
         .hud-header-tag { 
-            position: absolute; top: -38px; left: 10px; right: 10px;
+            position: absolute; top: -45px; left: 4%; right: 4%;
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 10px; color: #fff; background: rgba(51, 51, 51, 0.9); 
-            padding: 4px 10px; border-radius: 6px; border: 1px solid #555;
-            text-transform: uppercase;
+            font-size: 11px; color: #fff; background: rgba(30, 30, 30, 0.9); 
+            padding: 6px 12px; border-radius: 8px; border: 1px solid #444;
+            letter-spacing: 1px;
         }
+
+        .stats-bar {
+            width: 92%; display: flex; justify-content: space-between;
+            margin-bottom: 8px; font-size: 12px; font-weight: bold;
+        }
+        .stat-item { display: flex; align-items: center; gap: 4px; }
+        .stat-red { color: var(--emergency-red); }
+        .stat-yellow { color: var(--warning-gold); }
+        .stat-blue { color: var(--primary-blue); }
 
         #mainOverlay {
-            position: absolute; top: 10px; left: 10px; right: 10px; bottom: 60px;
-            background: rgba(5, 5, 5, 0.98); border: 3px solid #00d4ff; border-radius: 15px;
-            display: flex; flex-direction: column; padding: 15px; z-index: 100; box-shadow: 0 0 50px rgba(0,0,0,1);
+            position: absolute; top: 10px; left: 4%; right: 4%; bottom: 80px;
+            background: rgba(10, 10, 10, 0.95); border: 2px solid var(--primary-blue); border-radius: 20px;
+            display: flex; flex-direction: column; padding: 20px; z-index: 100;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
         }
-        .story-header { font-size: 20px; color: #ff3e3e; font-weight: 900; text-align: center; margin-bottom: 8px; text-transform: uppercase; }
-        .story-text { font-size: 14px; font-style: italic; color: #ddd; margin-bottom: 12px; line-height: 1.4; text-align: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid #00d4ff; min-height: 80px; }
+
+        .story-header { font-size: 22px; color: var(--emergency-red); font-weight: 900; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
+        .story-text { 
+            font-size: 14px; color: #eee; margin-bottom: 15px; line-height: 1.5; 
+            text-align: center; background: rgba(255,255,255,0.05); padding: 15px; 
+            border-radius: 12px; border-left: 4px solid var(--primary-blue);
+        }
         
-        .question-text { font-size: 14px; margin-bottom: 10px; line-height: 1.3; color: #fff; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .question-text { font-size: 15px; margin-bottom: 15px; line-height: 1.4; color: #fff; font-weight: bold; }
+        
         .option-btn { 
-            background: #2a2a2a; text-align: left; margin-bottom: 6px; padding: 12px; 
-            border-radius: 8px; font-size: 13px; border: 1px solid #444; width: 100%; color: white;
-            transition: 0.2s; cursor: pointer; -webkit-tap-highlight-color: transparent;
+            background: #252525; text-align: left; margin-bottom: 8px; padding: 14px; 
+            border-radius: 10px; font-size: 13px; border: 1px solid #444; width: 100%; color: white;
+            transition: all 0.2s ease; cursor: pointer;
         }
-        .option-btn:hover { background: #3a3a3a; border-color: #00d4ff; }
+        .option-btn:active { transform: scale(0.98); background: #333; }
         
-        #feedbackMsg { font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 16px; display: none; }
-        .correct { color: #27ae60; }
-        .wrong { color: #ff3e3e; }
+        #feedbackMsg { font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 18px; display: none; padding: 10px; border-radius: 8px; }
+        .correct { color: var(--success-green); background: rgba(39, 174, 96, 0.1); }
+        .wrong { color: var(--emergency-red); background: rgba(255, 62, 62, 0.1); }
 
-        .form-group { margin-bottom: 10px; text-align: left; width: 100%; }
-        .form-group label { display: block; font-size: 11px; color: #00d4ff; margin-bottom: 3px; font-weight: bold; }
+        .form-group { margin-bottom: 15px; text-align: left; width: 100%; }
+        .form-group label { display: block; font-size: 10px; color: var(--primary-blue); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .form-group input, .form-group select { 
-            width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #444; 
-            background: #1a1a1a; color: white; box-sizing: border-box; font-size: 16px;
+            width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #444; 
+            background: #111; color: white; box-sizing: border-box; font-size: 16px;
         }
 
-        .ambo-avatar { width: 60px; height: 100px; margin: 0 auto 10px auto; background: #fff; border-radius: 5px; position: relative; border: 2px solid #ddd; }
-        .ambo-stripe { width: 100%; height: 15px; background: #ff3e3e; position: absolute; top: 40px; }
-        .ambo-light { width: 30px; height: 8px; position: absolute; top: -10px; left: 15px; border-radius: 4px; animation: flash 0.3s infinite; }
-        @keyframes flash { 0% { background: #ff3e3e; } 50% { background: #00d4ff; } 100% { background: #ff3e3e; } }
+        .ambo-avatar { width: 50px; height: 80px; margin: 0 auto 15px; position: relative; background: #fff; border-radius: 4px; border: 2px solid #ccc; overflow: visible;}
+        .ambo-avatar::after { content: ''; position: absolute; top: 30px; left: 0; width: 100%; height: 12px; background: var(--emergency-red); }
+        .siren-light {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 10px; border-radius: 5px;
+            animation: flickerSiren 0.2s infinite alternate;
+        }
+        @keyframes flickerSiren {
+            0% { background: var(--emergency-red); box-shadow: 0 0 10px var(--emergency-red); }
+            100% { background: var(--primary-blue); box-shadow: 0 0 10px var(--primary-blue); }
+        }
 
-        .progress-container { width: 90%; height: 10px; background: #333; border-radius: 10px; margin-top: 15px; border: 2px solid #444; position: relative; }
-        #progressBar { width: 0%; height: 100%; background: linear-gradient(90deg, #00d4ff, #00ff88); transition: 0.4s; }
+        .progress-container { width: 92%; height: 8px; background: #222; border-radius: 10px; margin-top: 15px; overflow: hidden; border: 1px solid #333; }
+        #progressBar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary-blue), #00ff88); transition: width 0.4s ease; }
         
-        .game-btn { padding: 15px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 14px; }
-        .btn-green { background: #27ae60; width: 100%; margin-top: 10px; }
+        .game-btn { padding: 16px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-green { background: var(--success-green); width: 100%; margin-top: 10px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="hud-header-tag">
-        <span>Emergency Care Services</span>
-        <span>UNIT: <span id="hudPlayerID">---</span></span>
+        <span>EMERGENCY CARE SERVICES</span>
+        <span id="hudPlayerID">ID: ---</span>
     </div>
-    <div class="hud-top-left">❌ ERRORS: <span id="qErrors">0</span></div>
-    <div class="hud-top-center">💥 CRASHES: <span id="crashCount">0</span></div>
-    <div class="hud-top-right">🛣️ <span id="dist">0</span>m</div>
+
+    <div class="stats-bar">
+        <div class="stat-item stat-red">❌ ERRORS: <span id="qErrors">0</span></div>
+        <div class="stat-item stat-yellow">💥 CRASHES: <span id="crashCount">0</span></div>
+        <div class="stat-item stat-blue">🏁 <span id="dist">0</span>m</div>
+    </div>
     
-    <canvas id="game" width="360" height="550"></canvas>
+    <canvas id="game" width="360" height="580"></canvas>
     
     <div id="mainOverlay">
         <div id="screenStart" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-            <div class="story-header" style="font-size: 28px; color: #fff;">🚑 AMBO the Ambulance</div>
-            <div style="font-size: 12px; color: #ffcc00; font-weight: bold; text-align: center; margin-bottom: 20px;">for Emergency Care Services</div>
-            <button class="game-btn btn-green" onclick="showScreen('screenDetails')">START MISSION</button>
+            <h1 style="margin: 0; color: #fff; font-size: 28px;">🚑 AMBO</h1>
+            <p style="color: var(--warning-gold); font-size: 12px; letter-spacing: 2px; margin-bottom: 30px;">THE CLINICAL AMBULANCE</p>
+            <button class="game-btn btn-green" onclick="showScreen('screenDetails')">BEGIN MISSION</button>
         </div>
 
         <div id="screenDetails" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
-            <div class="story-header">📋 DEPLOYMENT</div>
+            <div class="story-header">DEPLOYMENT</div>
             <div class="form-group">
-                <label>ST. LUKE'S SITE</label>
+                <label>Assigned Site</label>
                 <select id="playerSite">
-                    <option value="Quezon City">Quezon City</option>
-                    <option value="Global City">Global City</option>
+                    <option value="Quezon City">St. Luke's - Quezon City</option>
+                    <option value="Global City">St. Luke's - Global City</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>EMPLOYEE NUMBER</label>
-                <input type="number" id="playerNum" inputmode="numeric" placeholder="Enter number only">
+                <label>Player Number</label>
+                <input type="number" id="playerNum" inputmode="numeric" placeholder="Enter employee number">
             </div>
-            <button class="game-btn btn-green" onclick="validateDetails()">CONFIRM</button>
+            <button class="game-btn btn-green" onclick="validateDetails()">CONFIRM DISPATCH</button>
         </div>
 
         <div id="screenBriefing" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
-            <div class="ambo-avatar"><div class="ambo-stripe"></div><div class="ambo-light"></div></div>
-            <div class="story-header">💬 AMBO SPEAKS:</div>
+            <div class="ambo-avatar"><div class="siren-light"></div></div>
+            <div class="story-header">BRIEFING</div>
             <div id="storyContent" class="story-text"></div>
             <button id="storyBtn" class="game-btn btn-green" onclick="nextStory()">NEXT</button>
         </div>
 
         <div id="screenQuiz" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
             <div id="feedbackMsg"></div>
-            <div class="question-text" id="qText">Question?</div>
+            <div class="question-text" id="qText"></div>
             <div id="optionsContainer"></div>
         </div>
     </div>
 
     <div class="progress-container"><div id="progressBar"></div></div>
-    <button onclick="location.reload()" class="game-btn restart-btn" style="background:#c0392b; margin-top:10px; font-size:10px; padding:5px 10px;">RESTART MISSION</button>
+    <button onclick="location.reload()" style="background:none; border:none; color:#555; margin-top:10px; font-size:10px; cursor:pointer;">RESTART SIMULATION</button>
 </div>
 
 <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
-    const distText = document.getElementById('dist'), qErrorText = document.getElementById('qErrors'), crashText = document.getElementById('crashCount'), hudPlayerID = document.getElementById('hudPlayerID'), progBar = document.getElementById('progressBar'), mainOverlay = document.getElementById('mainOverlay'), feedbackMsg = document.getElementById('feedbackMsg');
+    const distText = document.getElementById('dist'), 
+          qErrorText = document.getElementById('qErrors'), 
+          crashText = document.getElementById('crashCount'), 
+          hudPlayerID = document.getElementById('hudPlayerID'), 
+          progBar = document.getElementById('progressBar'), 
+          mainOverlay = document.getElementById('mainOverlay'), 
+          feedbackMsg = document.getElementById('feedbackMsg');
 
-    let distance = 0, crashes = 0, wrongAnswers = 0, isPaused = true, inQuiz = false, gameStarted = false;
-    let spawnTimer = 0, roadOffset = 0, invincibilityFrames = 0, arriving = false, missionComplete = false, launchAnimation = false;
+    let distance = 0, crashes = 0, wrongAnswers = 0, currentQuestionIndex = 0;
+    let isPaused = true, inQuiz = false, gameStarted = false;
+    let spawnTimer = 0, roadOffset = 0, invincibilityFrames = 0, arriving = false, missionComplete = false;
     let hospitalY = -400, storyPart = 0;
-    const WIN_DISTANCE = 6000;
 
-    const ambulance = { x: 165, y: 450, w: 35, h: 60, speed: 8 };
+    const ambulance = { x: 162, y: 480, w: 36, h: 70, speed: 7 };
     let traffic = [];
     const keys = {};
 
@@ -140,36 +189,36 @@
         let touchX = e.touches[0].clientX - rect.left;
         let scaleX = canvas.width / rect.width;
         ambulance.x = (touchX * scaleX) - (ambulance.w / 2);
-        if (ambulance.x < 10) ambulance.x = 10;
-        if (ambulance.x > canvas.width - ambulance.w - 10) ambulance.x = canvas.width - ambulance.w - 10;
+        if (ambulance.x < 15) ambulance.x = 15;
+        if (ambulance.x > canvas.width - ambulance.w - 15) ambulance.x = canvas.width - ambulance.w - 15;
         e.preventDefault();
     }, { passive: false });
 
     const amboStory = [
-        "Beep Beep! Partner! I'm Ambo 🚑. We have a priority transport for St. Luke's!",
-        "Documentation errors are dangerous! Each Error drops patient safety by 2%. Each traffic Crash drops it by 5%.",
-        "Dodge traffic by dragging me or using Arrow Keys. My terminal will prompt you at every dead-zone. Ready?"
+        "Welcome aboard, Partner! I'm AMBO 🚑. We need to reach the hospital safely.",
+        "Precision is key: Documentation errors drop patient stability by 2%. Traffic crashes drop it by 5%.",
+        "Move me by <b>dragging</b> on the screen or using <b>Left/Right Arrow Keys</b> to dodge traffic. Ready?"
     ];
 
     const questions = [
         { q: "Which URL is used to access the O-CIS portal?", a: ["hospitalportal.stluke.com.ph:3031", "10.10.60.95:8081/login", "portal.stlukes.com.ph", "ocis.stlukes.com.ph"], correct: 2 },
-        { q: "Select which tab for Patient Full Name/DOB during registration?", a: ["Supplemental", "Basic", "Visit", "Clinical"], correct: 1 },
-        { q: "Tick which option for critical patients to process faster?", a: ["Licensed Census", "Non-Census", "Express Registration", "VIP"], correct: 2 },
+        { q: "Select which tab for Patient Full Name/DOB during registration?", a: ["Demographics", "Supplemental", "Visit", "Clinical"], correct: 0 },
+        { q: "Tick which option for critical patients to be admitted faster?", a: ["Licensed Census", "Non-Census", "Express Registration", "VIP"], correct: 2 },
         { q: "What message appears if 'Search' finds no record?", a: ["Entry Not Found", "No Results Found", "User Unknown", "Create New"], correct: 1 },
-        { q: "Select which unit for ED in QC during registration?", a: ["QC-ER", "QC-EMERGENCY", "QC-ED", "QC-TRIAGE"], correct: 2 },
+        { q: "Which unit should be selected for ED in QC during registration?", a: ["QC-ER", "QC-EMERGENCY", "QC-ED", "QC-TRIAGE"], correct: 2 },
         { q: "Correct path to access scanning via OPAL?", a: ["File > Scan", "Tools > Opal Scanning", "Document > Start Scan", "Tools > Paper-Based"], correct: 1 },
         { q: "What characterizes an O-CIS 'Significant Field'?", a: ["Cannot save if empty", "Can save but tagged 'Incomplete'", "Billing only", "Needs co-signer"], correct: 1 },
-        { q: "Action required to view a saved document?", a: ["Single-click name", "Click Summary", "Double-click name in Documents", "Tools > Viewer"], correct: 2 },
+        { q: "Action required to view a saved document?", a: ["Single-click name", "Click Summary", "Double-click the specific document to be viewed", "Tools > Viewer"], correct: 2 },
         { q: "Co-signer radio button for Attending Physicians?", a: ["Other", "Current Provider", "Medical Director", "Referring"], correct: 1 },
         { q: "How to add a comment to a Flowsheet cell?", a: ["Double-click", "Right-click > Enter Comment", "Actions button", "Summary Views"], correct: 1 },
         { q: "Option to present Tracking Board on unit monitor?", a: ["Monitor View", "Display Board", "Unit Broadcast", "Full Screen"], correct: 1 },
-        { q: "Button to stop a flowsheet parameter no longer needed?", a: ["Delete", "Cancel", "Discontinue", "Remove"], correct: 2 },
+        { q: "Button to deactivate/suspend a flowsheet parameter no longer needed?", a: ["Delete", "Cancel", "Discontinue", "Remove"], correct: 2 },
         { q: "Button to return to patient list from tracking board?", a: ["Exit Board", "Close", "Patient List", "Main Menu"], correct: 2 },
         { q: "Where can the Order Entry Worksheet be accessed?", a: ["Main Toolbar only", "Main Toolbar or Patient Header", "Flowsheet only", "Registration"], correct: 1 },
         { q: "Radio button for patient with no allergies?", a: ["N/A", "No Known Allergies", "Negative", "Unknown"], correct: 1 },
         { q: "Besides browsing, how else to search clinical orders?", a: ["Barcode scan", "Type in search field", "Filter ICD10", "Recently Used"], correct: 1 },
         { q: "What is the 'Allergy Summary View' during ordering?", a: ["Billing requirement", "System safety feature", "Medication error", "Required note"], correct: 1 },
-        { q: "Status of specimen order after successful processing?", a: ["Pending Collection", "Received", "Collected", "Dispatched"], correct: 2 },
+        { q: "Status of specimen order once endorsed to performing unit?", a: ["Pending Collection", "Received", "Collected", "Dispatched"], correct: 1 },
         { q: "Co-signers required for Carrying Out Blood Transfusion?", a: ["None", "One", "Two", "Three"], correct: 2 },
         { q: "Override reason if no barcode present for transfusion?", a: ["Emergency Use", "No Barcode Present", "System Offline", "Manual Entry"], correct: 1 },
         { q: "Mandatory for High Alert Medication (HAM) validation?", a: ["Physician verbal", "Witnessed/Co-Signature", "ICD10 code", "Consent"], correct: 1 },
@@ -181,18 +230,18 @@
         { q: "Requirement for Discharge Diagnosis in legal docs?", a: ["Physician Sign", "ICD10 code", "Time", "Patient PIN"], correct: 1 },
         { q: "Order that stops further entries in patient chart?", a: ["Discharge Patient", "For Billing Discharge", "Ready for Billing", "Stop All Orders"], correct: 2 },
         { q: "Request type unit for replacement of busted lights?", a: ["FME-Electrical Engineering", "BMED", "Housekeeping", "IT Support"], correct: 0 },
-        { q: "Document automatically printed after discharge Clearing?", a: ["Pharmacy Slip", "GATE PASS", "Billing Statement", "Clinical Summary"], correct: 1 }
+        { q: "Document automatically printed after discharge visit has been performed?", a: ["Pharmacy Slip", "GATE PASS", "Billing Statement", "Clinical Summary"], correct: 1 }
     ];
 
     function showScreen(screenId) {
-        mainOverlay.querySelectorAll(':scope > div').forEach(div => div.style.display = 'none');
+        ['screenStart', 'screenDetails', 'screenBriefing', 'screenQuiz'].forEach(s => document.getElementById(s).style.display = 'none');
         document.getElementById(screenId).style.display = 'flex';
     }
 
     function validateDetails() {
         const val = document.getElementById('playerNum').value;
-        if (!val) { alert("Enter employee number"); return; }
-        hudPlayerID.innerText = val;
+        if (!val) { alert("Please enter your employee number."); return; }
+        hudPlayerID.innerText = "ID: " + val;
         storyPart = 0;
         showStoryPart();
         showScreen('screenBriefing');
@@ -200,7 +249,7 @@
 
     function showStoryPart() {
         document.getElementById('storyContent').innerHTML = amboStory[storyPart];
-        document.getElementById('storyBtn').innerText = storyPart === amboStory.length - 1 ? "🚀 LAUNCH AMBO" : "NEXT";
+        document.getElementById('storyBtn').innerText = storyPart === amboStory.length - 1 ? "🚀 LAUNCH" : "NEXT";
     }
 
     function nextStory() {
@@ -210,8 +259,7 @@
 
     function startMission() {
         mainOverlay.style.display = 'none';
-        isPaused = false; gameStarted = true; launchAnimation = true;
-        ambulance.y = 600; 
+        isPaused = false; gameStarted = true;
     }
 
     function triggerCheckpoint() {
@@ -223,6 +271,7 @@
     }
 
     function showQuestion() {
+        if (currentQuestionIndex >= questions.length) { resumeGame(); return; }
         const q = questions[currentQuestionIndex];
         document.getElementById('qText').innerText = q.q;
         const container = document.getElementById('optionsContainer');
@@ -230,7 +279,7 @@
         q.a.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
-            btn.innerText = (i+1) + ". " + opt;
+            btn.innerText = opt;
             btn.onclick = () => handleAnswer(i);
             container.appendChild(btn);
         });
@@ -238,22 +287,22 @@
 
     function handleAnswer(idx) {
         if (idx === questions[currentQuestionIndex].correct) {
-            feedbackMsg.innerText = "✅ Correct!";
+            feedbackMsg.innerText = "✓ SYSTEM UPDATED";
             feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
             currentQuestionIndex++;
             setTimeout(() => {
                 feedbackMsg.style.display = "none";
-                if (currentQuestionIndex % 5 !== 0 && currentQuestionIndex < 30) showQuestion();
-                else resumeGame();
-            }, 800);
+                if (currentQuestionIndex % 5 !== 0 && currentQuestionIndex < questions.length) { showQuestion(); } 
+                else { resumeGame(); }
+            }, 1000);
         } else {
-            distance = Math.max(0, distance - 250); 
             wrongAnswers++;
             qErrorText.innerText = wrongAnswers;
-            feedbackMsg.innerText = "❌ Wrong answer!";
+            feedbackMsg.innerText = "✗ DATA ERROR";
             feedbackMsg.className = "wrong";
             feedbackMsg.style.display = "block";
+            distance = Math.max(0, distance - 150);
         }
     }
 
@@ -261,72 +310,84 @@
         inQuiz = false; isPaused = false;
         mainOverlay.style.display = 'none';
         if (currentQuestionIndex >= 30) arriving = true;
-        else distance += 20; // Recalibrated nudge to bypass stuck distance
+        distance += 50; 
+    }
+
+    function drawAmbulance() {
+        if (invincibilityFrames % 10 < 5) {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(ambulance.x, ambulance.y, ambulance.w, ambulance.h);
+            ctx.fillStyle = '#ff3e3e';
+            ctx.fillRect(ambulance.x, ambulance.y + 30, ambulance.w, 12);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(ambulance.x + 4, ambulance.y + 6, ambulance.w - 8, 15);
+            let lightColor = (Math.floor(Date.now()/150)%2) ? '#ff3e3e' : '#00d4ff';
+            ctx.fillStyle = lightColor;
+            ctx.fillRect(ambulance.x + 6, ambulance.y - 4, 10, 5);
+            ctx.fillRect(ambulance.x + 20, ambulance.y - 4, 10, 5);
+        }
     }
 
     function drawCar(car) {
-        ctx.fillStyle = car.color; ctx.fillRect(car.x, car.y, car.w, car.h);
-        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(car.x+4, car.y+15, car.w-8, 25);
-        ctx.fillStyle = '#000'; ctx.fillRect(car.x+6, car.y+10, car.w-12, 6);
-        ctx.fillStyle = '#111';
-        ctx.fillRect(car.x-2, car.y+10, 3, 12); ctx.fillRect(car.x+car.w-1, car.y+10, 3, 12);
-        ctx.fillRect(car.x-2, car.y+car.h-22, 3, 12); ctx.fillRect(car.x+car.w-1, car.y+car.h-22, 3, 12);
+        ctx.fillStyle = car.color;
+        ctx.fillRect(car.x, car.y, car.w, car.h);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(car.x + 4, car.y + 8, car.w - 8, 12);
     }
 
     function drawHospital() {
-        ctx.fillStyle = '#ddd'; ctx.fillRect(30, hospitalY, 300, 320);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fillRect(20, hospitalY, 320, 350);
+        ctx.fillStyle = '#ff3e3e';
+        ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText("ST. LUKE'S MEDICAL CENTER", 180, hospitalY + 40);
         ctx.fillStyle = '#add8e6';
-        for(let i=0; i<4; i++) {
-            for(let j=0; j<4; j++) { ctx.fillRect(50 + (i*70), hospitalY + 50 + (j*65), 45, 45); }
+        for(let i=0; i<3; i++) {
+            for(let j=0; j<4; j++) ctx.fillRect(50 + (i*90), hospitalY + 80 + (j*60), 60, 40);
         }
-        ctx.fillStyle = '#ff3e3e'; ctx.font = '900 18px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText("ST. LUKE'S MEDICAL CENTER", 180, hospitalY + 35);
-        ctx.fillStyle = '#333'; ctx.fillRect(130, hospitalY + 260, 100, 60);
     }
 
     function update() {
         if (isPaused || !gameStarted || inQuiz) return;
         
-        if (launchAnimation) {
-            ambulance.y -= 5; roadOffset += 15;
-            if (ambulance.y <= 450) launchAnimation = false;
-            return;
-        }
-
         if (arriving) {
-            hospitalY += 3; roadOffset += 5;
+            traffic = [];
+            hospitalY += 3;
+            roadOffset += 4;
             if (hospitalY >= 100) {
                 ambulance.y -= 2;
-                if (ambulance.y <= 280) { isPaused = true; missionComplete = true; }
+                if (ambulance.y <= 300) { isPaused = true; missionComplete = true; }
             }
         } else {
-            if (keys['ArrowLeft'] && ambulance.x > 10) ambulance.x -= ambulance.speed;
-            if (keys['ArrowRight'] && ambulance.x < canvas.width - ambulance.w - 10) ambulance.x += ambulance.speed;
+            if (keys['ArrowLeft'] && ambulance.x > 15) ambulance.x -= ambulance.speed;
+            if (keys['ArrowRight'] && ambulance.x < canvas.width - ambulance.w - 15) ambulance.x += ambulance.speed;
 
-            distance += 2; roadOffset += 10;
+            distance += 3;
+            roadOffset += 12;
             if (invincibilityFrames > 0) invincibilityFrames--;
             
-            // Checkpoints at 1000m, 2000m, 3000m, 4000m, 5000m, 6000m
-            if (distance >= 1000 && currentQuestionIndex < 5) triggerCheckpoint();
-            else if (distance >= 2000 && currentQuestionIndex < 10) triggerCheckpoint();
-            else if (distance >= 3000 && currentQuestionIndex < 15) triggerCheckpoint();
-            else if (distance >= 4000 && currentQuestionIndex < 20) triggerCheckpoint();
-            else if (distance >= 5000 && currentQuestionIndex < 25) triggerCheckpoint();
-            else if (distance >= 6000 && currentQuestionIndex < 30) triggerCheckpoint();
+            const nextCheckpoint = (Math.floor(currentQuestionIndex / 5) + 1) * 1000;
+            if (distance >= nextCheckpoint && currentQuestionIndex < 30) triggerCheckpoint();
 
             spawnTimer++;
-            if (spawnTimer > 35) {
-                const colors = ['#e67e22', '#9b59b6', '#2ecc71', '#34495e', '#f1c40f'];
-                traffic.push({ x: Math.random()*(canvas.width-40), y: -100, w: 36, h: 68, speed: 4 + Math.random()*3, color: colors[Math.floor(Math.random()*colors.length)] });
+            if (spawnTimer > 40) {
+                const colors = ['#f39c12', '#8e44ad', '#27ae60', '#2980b9'];
+                traffic.push({ 
+                    x: Math.random()*(canvas.width-50) + 10, y: -100, w: 34, h: 65, 
+                    speed: 4 + Math.random()*4, color: colors[Math.floor(Math.random()*colors.length)] 
+                });
                 spawnTimer = 0;
             }
 
             for (let i = traffic.length-1; i >= 0; i--) {
                 traffic[i].y += traffic[i].speed;
-                if (invincibilityFrames === 0 && ambulance.x < traffic[i].x + traffic[i].w && ambulance.x + ambulance.w > traffic[i].x && ambulance.y < traffic[i].y + traffic[i].h && ambulance.y + ambulance.h > traffic[i].y) {
-                    distance = Math.max(0, distance - 100);
+                if (invincibilityFrames === 0 && 
+                    ambulance.x < traffic[i].x + traffic[i].w && 
+                    ambulance.x + ambulance.w > traffic[i].x && 
+                    ambulance.y < traffic[i].y + traffic[i].h && 
+                    ambulance.y + ambulance.h > traffic[i].y) {
                     crashes++; crashText.innerText = crashes;
-                    invincibilityFrames = 60; 
+                    invincibilityFrames = 70; distance = Math.max(0, distance - 200);
                 }
                 if (traffic[i].y > canvas.height) traffic.splice(i, 1);
             }
@@ -338,27 +399,19 @@
     function draw() {
         ctx.clearRect(0,0, canvas.width, canvas.height);
         ctx.fillStyle = '#222'; ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.strokeStyle = '#f1c40f'; ctx.setLineDash([40, 40]); ctx.lineDashOffset = -roadOffset; ctx.lineWidth = 6;
+        ctx.strokeStyle = '#f1c40f'; ctx.setLineDash([40, 40]); ctx.lineDashOffset = -roadOffset; ctx.lineWidth = 4;
         ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
         if (arriving) drawHospital();
-        if (invincibilityFrames % 10 < 5) {
-            ctx.fillStyle = '#fff'; ctx.fillRect(ambulance.x, ambulance.y, ambulance.w, ambulance.h);
-            ctx.fillStyle = '#ff3e3e'; ctx.fillRect(ambulance.x, ambulance.y + 25, ambulance.w, 10);
-            let lightColor = (Math.floor(Date.now()/150)%2) ? '#ff3e3e' : '#00d4ff';
-            ctx.fillStyle = lightColor; ctx.fillRect(ambulance.x + 8, ambulance.y - 6, 20, 7);
-        }
-        if (!arriving) traffic.forEach(drawCar);
-
+        traffic.forEach(drawCar);
+        drawAmbulance();
         if (missionComplete) {
             let safety = Math.max(0, 100 - (wrongAnswers * 2) - (crashes * 5));
-            ctx.fillStyle = 'rgba(0,0,0,0.95)'; ctx.fillRect(10, 150, canvas.width-20, 250);
+            ctx.fillStyle = 'rgba(0,0,0,0.9)'; ctx.fillRect(20, 180, canvas.width-40, 220);
             ctx.fillStyle = '#00ff88'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText("MISSION ACCOMPLISHED!", 180, 210);
-            ctx.fillStyle = '#ffcc00'; ctx.font = 'bold 30px sans-serif';
-            ctx.fillText(`SAFETY: ${safety}%`, 180, 270);
-            ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif';
-            ctx.fillText(`Patient Successfully Turned Over.`, 180, 310);
-            ctx.fillText(`Employee ID: ${hudPlayerID.innerText}`, 180, 340);
+            ctx.fillText("MISSION COMPLETE", 180, 240);
+            ctx.fillStyle = '#fff'; ctx.font = '40px sans-serif'; ctx.fillText(safety + "%", 180, 300);
+            ctx.font = '14px sans-serif'; ctx.fillText("PATIENT STABILITY SCORE", 180, 330);
+            ctx.fillStyle = '#aaa'; ctx.fillText(hudPlayerID.innerText, 180, 370);
         }
         requestAnimationFrame(draw);
     }

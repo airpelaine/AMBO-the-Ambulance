@@ -14,13 +14,22 @@
         }
 
         body { 
-            display: flex; justify-content: center; align-items: center; 
+            display: flex; justify-content: center; align-items: flex-start; 
             height: 100vh; margin: 0; background: var(--bg-dark); 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: white; overflow: hidden;
             touch-action: none;
+            padding-top: 15px; /* Global mobile buffer */
         }
 
-        .container { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 420px; }
+        .container { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            width: 100%; 
+            max-width: 420px; 
+            margin-top: 60px; /* Added clearance for the absolute HUD tag */
+        }
 
         canvas { 
             background: #1a1a1a; 
@@ -34,11 +43,12 @@
         
         /* HUD Styles */
         .hud-header-tag { 
-            position: absolute; top: -45px; left: 4%; right: 4%;
+            position: absolute; top: -50px; left: 4%; right: 4%;
             display: flex; justify-content: space-between; align-items: center;
             font-size: 11px; color: #fff; background: rgba(30, 30, 30, 0.9); 
-            padding: 6px 12px; border-radius: 8px; border: 1px solid #444;
+            padding: 8px 12px; border-radius: 8px; border: 1px solid #444;
             letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .stats-bar {
@@ -52,7 +62,7 @@
 
         /* Overlay Systems */
         #mainOverlay {
-            position: absolute; top: 10px; left: 4%; right: 4%; bottom: 80px;
+            position: absolute; top: 0px; left: 4%; right: 4%; bottom: 80px;
             background: rgba(10, 10, 10, 0.95); border: 2px solid var(--primary-blue); border-radius: 20px;
             display: flex; flex-direction: column; padding: 20px; z-index: 100;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
@@ -79,7 +89,6 @@
         .correct { color: var(--success-green); background: rgba(39, 174, 96, 0.1); }
         .wrong { color: var(--emergency-red); background: rgba(255, 62, 62, 0.1); }
 
-        /* Form Inputs */
         .form-group { margin-bottom: 15px; text-align: left; width: 100%; }
         .form-group label { display: block; font-size: 10px; color: var(--primary-blue); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .form-group input, .form-group select { 
@@ -87,8 +96,7 @@
             background: #111; color: white; box-sizing: border-box; font-size: 16px;
         }
 
-        /* Briefing Siren Visual */
-        .ambo-avatar { width: 50px; height: 80px; margin: 0 auto 15px; position: relative; background: #fff; border-radius: 4px; border: 2px solid #ccc; overflow: visible;}
+        .ambo-avatar { width: 50px; height: 80px; margin: 0 auto 15px; position: relative; background: #fff; border-radius: 4px; border: 2px solid #ccc; }
         .ambo-avatar::after { content: ''; position: absolute; top: 30px; left: 0; width: 100%; height: 12px; background: var(--emergency-red); }
         .siren-light {
             position: absolute; top: -10px; left: 50%; transform: translateX(-50%);

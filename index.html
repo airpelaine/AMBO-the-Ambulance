@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMBO - Emergency Care Mission</title>
+    <title>AMBO - Clinical Mission</title>
     <style>
         :root {
             --primary-blue: #00d4ff;
@@ -18,7 +18,7 @@
             height: 100vh; margin: 0; background: var(--bg-dark); 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: white; overflow: hidden;
             touch-action: none;
-            padding-top: 15px; /* Global mobile buffer */
+            padding-top: 15px;
         }
 
         .container { 
@@ -28,7 +28,7 @@
             align-items: center; 
             width: 100%; 
             max-width: 420px; 
-            margin-top: 60px; /* Added clearance for the absolute HUD tag */
+            margin-top: 60px;
         }
 
         canvas { 
@@ -41,7 +41,6 @@
             cursor: crosshair;
         }
         
-        /* HUD Styles */
         .hud-header-tag { 
             position: absolute; top: -50px; left: 4%; right: 4%;
             display: flex; justify-content: space-between; align-items: center;
@@ -60,7 +59,6 @@
         .stat-yellow { color: var(--warning-gold); }
         .stat-blue { color: var(--primary-blue); }
 
-        /* Overlay Systems */
         #mainOverlay {
             position: absolute; top: 0px; left: 4%; right: 4%; bottom: 80px;
             background: rgba(10, 10, 10, 0.95); border: 2px solid var(--primary-blue); border-radius: 20px;
@@ -74,6 +72,7 @@
             font-size: 14px; color: #eee; margin-bottom: 15px; line-height: 1.5; 
             text-align: center; background: rgba(255,255,255,0.05); padding: 15px; 
             border-radius: 12px; border-left: 4px solid var(--primary-blue);
+            transition: opacity 0.4s ease;
         }
         
         .question-text { font-size: 15px; margin-bottom: 15px; line-height: 1.4; color: #fff; font-weight: bold; }
@@ -89,11 +88,11 @@
         .correct { color: var(--success-green); background: rgba(39, 174, 96, 0.1); }
         .wrong { color: var(--emergency-red); background: rgba(255, 62, 62, 0.1); }
 
-        .form-group { margin-bottom: 15px; text-align: left; width: 100%; }
+        .form-group { margin-bottom: 12px; text-align: left; width: 100%; }
         .form-group label { display: block; font-size: 10px; color: var(--primary-blue); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .form-group input, .form-group select { 
-            width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #444; 
-            background: #111; color: white; box-sizing: border-box; font-size: 16px;
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; 
+            background: #111; color: white; box-sizing: border-box; font-size: 14px;
         }
 
         .ambo-avatar { width: 50px; height: 80px; margin: 0 auto 15px; position: relative; background: #fff; border-radius: 4px; border: 2px solid #ccc; }
@@ -119,7 +118,7 @@
 
 <div class="container">
     <div class="hud-header-tag">
-        <span>EMERGENCY CARE SERVICES</span>
+        <span id="hudModuleTitle">CLINICAL SERVICES</span>
         <span id="hudPlayerID">ID: ---</span>
     </div>
 
@@ -140,6 +139,16 @@
 
         <div id="screenDetails" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
             <div class="story-header">DEPLOYMENT</div>
+            
+            <div class="form-group">
+                <label>Training Module</label>
+                <select id="trainingModule">
+                    <option value="Acute Care">Acute Care Competency</option>
+                    <option value="Surgical Care">Surgical Care</option>
+                    <option value="Emergency Care Services">Emergency Care Services</option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Assigned Site</label>
                 <select id="playerSite">
@@ -148,7 +157,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Player Number</label>
+                <label>Employee Number</label>
                 <input type="number" id="playerNum" inputmode="numeric" placeholder="Enter employee number">
             </div>
             <button class="game-btn btn-green" onclick="validateDetails()">CONFIRM DISPATCH</button>
@@ -178,7 +187,8 @@
     const distText = document.getElementById('dist'), 
           qErrorText = document.getElementById('qErrors'), 
           crashText = document.getElementById('crashCount'), 
-          hudPlayerID = document.getElementById('hudPlayerID'), 
+          hudPlayerID = document.getElementById('hudPlayerID'),
+          hudModuleTitle = document.getElementById('hudModuleTitle'),
           progBar = document.getElementById('progressBar'), 
           mainOverlay = document.getElementById('mainOverlay'), 
           feedbackMsg = document.getElementById('feedbackMsg');
@@ -206,13 +216,15 @@
         e.preventDefault();
     }, { passive: false });
 
+    // --- UPDATED AMBO DIALOGUE WITH HTML BOLD TAGS ---
     const amboStory = [
-        "Welcome aboard, Partner! I'm AMBO 🚑. We need to reach the hospital safely.",
-        "Precision is key: Documentation errors drop patient stability by 2%. Traffic crashes drop it by 5%.",
-        "Move me by <b>dragging</b> on the screen or using <b>Left/Right Arrow Keys</b> to dodge traffic. Ready?"
+        "Hey there, Partner! 👋 I'm <b>AMBO</b>, your clinical mission partner. We've got a patient in the back depending on us to get to the hospital. You ready to roll?",
+        "Precision is everything today. If you miss a clinical question, our patient's stability drops by <b>2%</b>. If you clip another car, that's a <b>5%</b> hit.",
+        "I'll handle the siren, you handle the steering. <b>Drag your finger</b> across the screen (or use <b>Arrow Keys</b>) to dodge traffic. We'll pause for chart updates every 1,000 meters.",
+        "Our patient's safety is in your hands. Let's show them why we're the best at St. Luke's. Launch when you're ready!"
     ];
 
-    const questions = [
+    const emergencyQuestions = [
         { q: "Which URL is used to access the O-CIS portal?", a: ["hospitalportal.stluke.com.ph:3031", "10.10.60.95:8081/login", "portal.stlukes.com.ph", "ocis.stlukes.com.ph"], correct: 2 },
         { q: "Select which tab for Patient Full Name/DOB during registration?", a: ["Supplemental", "Demographics", "Visit", "Clinical"], correct: 1 },
         { q: "Tick which option for critical patients to be admitted faster?", a: ["Licensed Census", "Non-Census", "Express Registration", "VIP"], correct: 2 },
@@ -220,11 +232,11 @@
         { q: "Which unit should be selected for ED in QC during registration?", a: ["QC-ER", "QC-EMERGENCY", "QC-ED", "QC-TRIAGE"], correct: 2 },
         { q: "Correct path to access scanning via OPAL?", a: ["File > Scan", "Tools > Opal Scanning", "Document > Start Scan", "Tools > Paper-Based"], correct: 1 },
         { q: "What characterizes an O-CIS 'Significant Field'?", a: ["Cannot save if empty", "Can save but tagged 'Incomplete'", "Billing only", "Needs co-signer"], correct: 1 },
-        { q: "Action required to view a saved document?", a: ["Single-click name", "Click Summary", "Double-click the specific document to be viewed", "Tools > Viewer"], correct: 2 },
+        { q: "Action required to view a saved document?", a: ["Single-click name", "Click Summary", "Double-click specific document", "Tools > Viewer"], correct: 2 },
         { q: "Co-signer radio button for Attending Physicians?", a: ["Other", "Current Provider", "Medical Director", "Referring"], correct: 1 },
         { q: "How to add a comment to a Flowsheet cell?", a: ["Double-click", "Right-click > Enter Comment", "Actions button", "Summary Views"], correct: 1 },
         { q: "Option to present Tracking Board on unit monitor?", a: ["Monitor View", "Display Board", "Unit Broadcast", "Full Screen"], correct: 1 },
-        { q: "Button to deactivate/suspend a flowsheet parameter no longer needed?", a: ["Delete", "Cancel", "Discontinue", "Remove"], correct: 2 },
+        { q: "Button to deactivate a flowsheet parameter no longer needed?", a: ["Delete", "Cancel", "Discontinue", "Remove"], correct: 2 },
         { q: "Button to return to patient list from tracking board?", a: ["Exit Board", "Close", "Patient List", "Main Menu"], correct: 2 },
         { q: "Where can the Order Entry Worksheet be accessed?", a: ["Main Toolbar only", "Main Toolbar or Patient Header", "Flowsheet only", "Registration"], correct: 1 },
         { q: "Radio button for patient with no allergies?", a: ["N/A", "No Known Allergies", "Negative", "Unknown"], correct: 1 },
@@ -241,9 +253,77 @@
         { q: "Required printout for CSS department claiming?", a: ["Orders/Charges screenshot", "Patient ID", "Physician Order", "Admission form"], correct: 0 },
         { q: "Requirement for Discharge Diagnosis in legal docs?", a: ["Physician Sign", "ICD10 code", "Time", "Patient PIN"], correct: 1 },
         { q: "Order that stops further entries in patient chart?", a: ["Discharge Patient", "For Billing Discharge", "Ready for Billing", "Stop All Orders"], correct: 2 },
-        { q: "Request type unit for replacement of busted lights in Patient Flow?", a: ["FME-Electrical Engineering", "BMED", "Housekeeping", "IT Support"], correct: 0 },
-        { q: "Document automatically printed after discharge visit has been performed?", a: ["Pharmacy Slip", "GATE PASS", "Billing Statement", "Clinical Summary"], correct: 1 }
+        { q: "Request type for replacement of busted lights in Patient Flow?", a: ["FME-Electrical Engineering", "BMED", "Housekeeping", "IT Support"], correct: 0 },
+        { q: "Document automatically printed after discharge visit?", a: ["Pharmacy Slip", "GATE PASS", "Billing Statement", "Clinical Summary"], correct: 1 }
     ];
+
+    const acuteCareQuestions = [
+        { q: "Which URL should be used to access the St. Luke’s portal for O-CIS?", a: ["stlukes.com.ph", "portal.stlukes.com.ph/", "ocis.stlukes.com.ph", "hospitalportal.stlukes.com.ph"], correct: 1 },
+        { q: "When creating a Personal Visit List, which button must be held down to select multiple assigned patients?", a: ["Shift", "Alt", "CTRL", "Command"], correct: 2 },
+        { q: "What is the specific name of the production environment for O-CIS?", a: ["OCIS-TEST", "OCIS-PROD", "OCIS-LIVE", "OCIS-MAIN"], correct: 1 },
+        { q: "Where is the 'Enter Order' button located in the EMR interface?", a: ["CHART LEVEL Toolbar", "Options Panel", "Patient Header", "Flowsheet Tab"], correct: 2 },
+        { q: "What information is required every time a nurse submits an order for authentication?", a: ["Employee ID", "Fingerprint Scan", "Password", "Manager’s Approval"], correct: 2 },
+        { q: "Which 'Session Type' should be chosen when entering a standard medical order?", a: ["Emergency", "Standard", "Urgent", "Routine"], correct: 1 },
+        { q: "How can a nurse modify an order in the Cart but not yet submitted?", a: ["Right-click Delete", "Double-click order or Edit", "Must be re-entered", "Contact IT"], correct: 1 },
+        { q: "Which tab is used to create a 'Pending Incoming Visit List'?", a: ["Patient List", "Clinical Summary", "Orders", "Flowsheet"], correct: 0 },
+        { q: "Transferring a patient to a different room, which section is used?", a: ["Temporary", "Assigned", "Ancillary", "Discharge"], correct: 1 },
+        { q: "When AN ADMITTED patient is moved to an ancillary department (like Radiology) FOR A PROCEDURE, which section of the Location icon is used?", a: ["Assigned", "Permanent", "Temporary", "Outpatient"], correct: 2 },
+        { q: "What happens if a field tagged as 'Significant' is left blank?", a: ["Cannot save", "Saves but tagged 'Incomplete'", "System fills N/A", "Prevents logout"], correct: 1 },
+        { q: "Which assessment tool is specifically used for pediatric fall risk?", a: ["Morse Fall Risk", "Humpty Dumpty Fall Risk", "Obstetric Fall Risk", "Braden Scale"], correct: 1 },
+        { q: "How do you add a new time column to a flowsheet?", a: ["File > New Column", "Column Options or right-click gray area", "Drag and drop", "Automatic"], correct: 1 },
+        { q: "To remove a parameter flowsheet entered in error, which action is used?", a: ["Delete", "Cancel", "Discontinue", "Hide"], correct: 1 },
+        { q: "In Medication History, what does a RED circle icon indicate?", a: ["History complete", "Not collected/started", "No allergies", "High-alert meds"], correct: 1 },
+        { q: "What are the first two steps in the KBMA workflow?", a: ["Scan drug, scan patient", "Scan patient barcode, scan drug barcode", "Check ID, ask name", "Open MAR, scan drug"], correct: 1 },
+        { q: "What is required when administering High Alert Medications (HAM)?", a: ["Physician verbal", "Witnessed/Co-Signature", "Pharmacy approval", "2nd patient scan"], correct: 1 },
+        { q: "Tool used to coordinate with Pharmacy regarding a medication refill?", a: ["Order Worksheet", "Order Message Manager", "Flowsheet Comments", "Signature Manager"], correct: 1 },
+        { q: "Under what circumstance would a nurse 'Suspend' a medication?", a: ["Patient sleeping", "Patient on NPO Pre-Op", "Out of stock", "Later dose request"], correct: 1 },
+        { q: "Document to be printed (1 copy) before claiming blood product?", a: ["Admission Note", "Consent for Blood Transfusion", "Vital Signs", "Lab Results"], correct: 1 },
+        { q: "When carrying out a blood transfusion in the Worklist, what must be selected if THE PRODUCT HAS NO BARCODE for verification?", a: ["Manual Entry", "No Barcode Present", "Override Manager", "Emergency Release"], correct: 1 },
+        { q: "How many co-signers are required for Carrying Out Blood Transfusion?", a: ["One", "Two", "Three", "None"], correct: 1 },
+        { q: "Which system is used for charging miscellaneous supplies and clinical equipment?", a: ["O-CIS", "SLB (St. Luke's Billing)", "OPAL", "Patient Flow"], correct: 1 },
+        { q: "What must be printed for CSS claiming after encoding in SLB?", a: ["Patient Header", "Supplies tab screenshot (2 copies)", "Medical Record", "MD Order"], correct: 1 },
+        { q: "Which tool is used to SUBMIT A MAINTENANCE REQUEST?", a: ["Worklist Manager", "Patient Flow", "Order Entry", "Clinical Summary"], correct: 1 },
+        { q: "Which order in OCIS stops further entries in the chart?", a: ["Discharge Patient", "Ready for Billing", "Final Summary", "Gate Pass"], correct: 1 },
+        { q: "To pull up medication instructions created by MDs into the nursing discharge note, which FEATURE is used?", a: ["Refresh", "GET MED LIST", "Import Data", "Sync"], correct: 1 },
+        { q: "What is required for the 'For Billing Discharge' option to appear in the SLB Nursing Unit landing page?", a: ["The patient must be physically out of the room", "A CORE discharge order made", "All laboratory results must be complete", "The patient must have paid their bill in full"], correct: 1 },
+        { q: "What is the 'Read Only Environment' (ROE) used for?", a: ["Edit orders", "BCP when system is down", "Student practice", "Admin data"], correct: 1 },
+        { q: "Specific browser URL to access ROE at St. Luke’s QC?", a: ["portal.stlukes.ph", "slmcqcprodbcs4/bcs/login", "backup.stlukes.ph", "roe.stlukes.ph"], correct: 1 }
+    ];
+
+    const surgicalCareQuestions = [
+        { q: "Which EMR module is used to LOG a new outpatient visit?", a: ["Scheduling", "Registration", "Surgery Care", "Flowsheets"], correct: 1 },
+        { q: "When registering a patient who is not yet at the hospital, what status should the visit be set to?", a: ["Adm/Arr", "Pre-Reg", "Outpatient", "In-Patient"], correct: 1 },
+        { q: "In which registration tab are the 'Care Level' and 'Attending Provider' fields located?", a: ["Basic Tab", "Visit Criteria", "Visit Demographics", "Location"], correct: 2 },
+        { q: "According to the GUIDELINES, how should patient information be typed into the registration window?", a: ["lowercase", "Sentence case", "UPPERCASE", "Italicized"], correct: 2 },
+        { q: "Which electronic device is used for capturing patient signatures on digital consent forms?", a: ["Stylus Pen", "TOPAZ", "Tablet PC", "Scanner"], correct: 1 },
+        { q: "To book a surgical case via Demand Booking, what button must be clicked after highlighting the patient name?", a: ["Create New Visit", "Edit Patient/Book", "Add Procedure", "Schedule Roster"], correct: 1 },
+        { q: "Which values autopopulate in the 'Supplemental Info' tab once a specific procedure is selected?", a: ["Surgeon and Anesthesiologist", "Date and Room Number", "Description, Preference Card, and Duration", "MRN and Visit Number"], correct: 2 },
+        { q: "If a procedure requires specific anatomical details (e.g., Left or Right), which fields must be filled?", a: ["Location and Unit", "Laterality and Site", "Primary and Secondary", "Code and Description"], correct: 1 },
+        { q: "Where should the case 'Confirmation Code' be documented during the booking process?", a: ["Visit Demographics", "Patient Header", "Booking Comments", "Case Status"], correct: 2 },
+        { q: "Which of the following DOCUMENTS IS ACCOMPLISHED PRIOR SURGERY/PROCEDURE?", a: ["PreOp Nursing Note", "IntraOp Record", "Post Op Nursing Note", "Recovery Discharge"], correct: 0 },
+        { q: "When using Ad-Hoc Booking, which menu bar option is selected to enter a surgical case?", a: ["File", "Registration", "Surgery", "Tools"], correct: 2 },
+        { q: "Who is responsible for updating Preference Cards with new items?", a: ["Surgeon", "OR/DR Nurse Unit Manager", "CSS Staff", "IT Support"], correct: 1 },
+        { q: "To update case participants (Surgeons/Anesthesiologists), which tab in Surgery Case Details must be opened?", a: ["Case Usage", "Intra-op", "Supplemental Info", "Document Info"], correct: 1 },
+        { q: "During an ongoing case, in which column should you adjust the quantity of items used?", a: ["Qty column", "Used column", "Planned column", "Status column"], correct: 1 },
+        { q: "What is the first step when documenting and charging for an Implant?", a: ["Search for CHRG ANS", "Open Surgery Case List", "Click on 'Implants' on the Main Toolbar", "Click Add New Visit"], correct: 2 },
+        { q: "If an implant price is unavailable, what amount should be encoded in the system?", a: ["1.00", "0", "Market Value", "Leave it blank"], correct: 1 },
+        { q: "What must be done immediately after a surgical specimen is collected to begin EMR documentation?", a: ["Print Case List", "Right click the specimen order and select 'Add Specimen...'", "Close the patient chart", "Open the PACU Flowsheet"], correct: 1 },
+        { q: "To print a specimen label, what technical detail must be copied from the order window?", a: ["Patient MRN", "Visit Number", "Order ID", "Surgeon Name"], correct: 2 },
+        { q: "Which policy governs 'Specimen Collection, Identification and Handling'?", a: ["Leadership 1-114-2", "Patient Care and Safety 1-47-6", "Clinical Records Management 1-13-7", "Regulatory 1-15-2"], correct: 1 },
+        { q: "In the 'Add Specimen' window, what specific INFORMATION is required?", a: ["Arrival Time", "Collection Start Date and Start Time", "Pathology Receipt Time", "Surgeon Approval Time"], correct: 1 },
+        { q: "Which icon facilitates the patient location update from OR to PACU?", a: ["Enter Document icon", "Change Location icon", "Enter Order icon", "Signature Manager icon"], correct: 1 },
+        { q: "What radio button is selected in the 'Effective' section for an immediate patient transfer?", a: ["Now", "Date & Time", "Pre-Reg", "Schedule"], correct: 0 },
+        { q: "Which flowsheet must be searched for and added during recovery documentation?", a: ["Intake and Output", "Assessment and Cares", "PACU Flowsheet", "Plan of Care"], correct: 2 },
+        { q: "How do you set a documentation frequency (e.g., every 15 minutes) on a flowsheet?", a: ["Click 'Add Parameter'", "Use the Save Options in the Options Panel to fill out Frequency", "Right click on the time column", "Click 'Modify Row Label'"], correct: 1 },
+        { q: "What is the correct method to remove data accidentally entered into a flowsheet cell?", a: ["Use the Delete key", "Right click and select 'Delete Cell Data'", "Click 'Cancel Parameter'", "Highlight and type 'X'"], correct: 1 },
+        { q: "When finalizing case usage, who performs the final checking of review items and quantities?", a: ["RN", "CSS", "CN (Charge Nurse)", "Unit Manager"], correct: 2 },
+        { q: "If the Planned Procedure matches the Performed Procedure, what must the nurse check?", a: ["The Add icon", "The 'Performed' tickbox", "The 'Post Selected' icon", "The 'Save' button"], correct: 1 },
+        { q: "After clicking the 'Post Selected' icon in the Charges tab, the status changes from Pending Post to what?", a: ["Transmitted", "Posted", "Verified", "Closed"], correct: 1 },
+        { q: "Which module is used to verify that charges were successfully transmitted to the SLB system?", a: ["Charges Entry, Adjustment and Cancellation (CEAC)", "Nursing Special Units Landing Page", "Surgery Case List", "Business Continuity Solution"], correct: 0 },
+        { q: "What must be ticked to remove the temporary location from the patient's header?", a: ["Change Location", "Clear Current Temporary Location", "Arrive/Cancel Arrival", "Discontinue"], correct: 1 }
+    ];
+
+    let currentQuestionSet = [];
 
     function showScreen(screenId) {
         ['screenStart', 'screenDetails', 'screenBriefing', 'screenQuiz'].forEach(s => document.getElementById(s).style.display = 'none');
@@ -252,21 +332,45 @@
 
     function validateDetails() {
         const val = document.getElementById('playerNum').value;
+        const module = document.getElementById('trainingModule').value;
         if (!val) { alert("Please enter your employee number."); return; }
+        
         hudPlayerID.innerText = "ID: " + val;
+        hudModuleTitle.innerText = module.toUpperCase();
+        
+        if (module === "Acute Care") {
+            currentQuestionSet = acuteCareQuestions;
+        } else if (module === "Surgical Care") {
+            currentQuestionSet = surgicalCareQuestions;
+        } else {
+            currentQuestionSet = emergencyQuestions;
+        }
+        
         storyPart = 0;
         showStoryPart();
         showScreen('screenBriefing');
     }
 
+    // --- REWRITTEN BRIEFING LOGIC WITH FADE ---
     function showStoryPart() {
-        document.getElementById('storyContent').innerHTML = amboStory[storyPart];
-        document.getElementById('storyBtn').innerText = storyPart === amboStory.length - 1 ? "🚀 LAUNCH" : "NEXT";
+        const storyBox = document.getElementById('storyContent');
+        storyBox.style.opacity = 0;
+        
+        setTimeout(() => {
+            storyBox.innerHTML = amboStory[storyPart];
+            storyBox.style.opacity = 1;
+        }, 100);
+
+        document.getElementById('storyBtn').innerText = storyPart === amboStory.length - 1 ? "🚀 DEPLOY NOW" : "CONTINUE";
     }
 
     function nextStory() {
-        if (storyPart < amboStory.length - 1) { storyPart++; showStoryPart(); }
-        else { startMission(); }
+        if (storyPart < amboStory.length - 1) { 
+            storyPart++; 
+            showStoryPart(); 
+        } else { 
+            startMission(); 
+        }
     }
 
     function startMission() {
@@ -283,8 +387,8 @@
     }
 
     function showQuestion() {
-        if (currentQuestionIndex >= questions.length) { resumeGame(); return; }
-        const q = questions[currentQuestionIndex];
+        if (currentQuestionIndex >= currentQuestionSet.length) { resumeGame(); return; }
+        const q = currentQuestionSet[currentQuestionIndex];
         document.getElementById('qText').innerText = q.q;
         const container = document.getElementById('optionsContainer');
         container.innerHTML = '';
@@ -298,14 +402,14 @@
     }
 
     function handleAnswer(idx) {
-        if (idx === questions[currentQuestionIndex].correct) {
+        if (idx === currentQuestionSet[currentQuestionIndex].correct) {
             feedbackMsg.innerText = "✓ SYSTEM UPDATED";
             feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
             currentQuestionIndex++;
             setTimeout(() => {
                 feedbackMsg.style.display = "none";
-                if (currentQuestionIndex % 5 !== 0 && currentQuestionIndex < questions.length) { showQuestion(); } 
+                if (currentQuestionIndex % 5 !== 0 && currentQuestionIndex < currentQuestionSet.length) { showQuestion(); } 
                 else { resumeGame(); }
             }, 1000);
         } else {
@@ -321,7 +425,7 @@
     function resumeGame() {
         inQuiz = false; isPaused = false;
         mainOverlay.style.display = 'none';
-        if (currentQuestionIndex >= 30) arriving = true;
+        if (currentQuestionIndex >= currentQuestionSet.length) arriving = true;
         distance += 50; 
     }
 
@@ -379,7 +483,7 @@
             if (invincibilityFrames > 0) invincibilityFrames--;
             
             const nextCheckpoint = (Math.floor(currentQuestionIndex / 5) + 1) * 1000;
-            if (distance >= nextCheckpoint && currentQuestionIndex < 30) triggerCheckpoint();
+            if (distance >= nextCheckpoint && currentQuestionIndex < currentQuestionSet.length) triggerCheckpoint();
 
             spawnTimer++;
             if (spawnTimer > 40) {
@@ -405,7 +509,7 @@
             }
         }
         distText.innerText = Math.floor(distance);
-        progBar.style.width = (currentQuestionIndex / 30 * 100) + "%";
+        progBar.style.width = (currentQuestionIndex / currentQuestionSet.length * 100) + "%";
     }
 
     function draw() {

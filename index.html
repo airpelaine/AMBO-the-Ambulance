@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMBO - Clinical Mission</title>
+    <title>AMBO - Automated Module-Based Outcome</title>
     <style>
         :root {
             --primary-blue: #00d4ff;
@@ -16,29 +16,18 @@
         body { 
             display: flex; justify-content: center; align-items: flex-start; 
             height: 100vh; margin: 0; background: var(--bg-dark); 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: white; overflow: hidden;
-            touch-action: none;
-            padding-top: 15px;
+            font-family: 'Segoe UI', Roboto, sans-serif; color: white; overflow: hidden;
+            touch-action: none; padding-top: 15px;
         }
 
         .container { 
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            width: 100%; 
-            max-width: 420px; 
-            margin-top: 60px;
+            position: relative; display: flex; flex-direction: column; align-items: center; 
+            width: 100%; max-width: 420px; margin-top: 60px;
         }
 
         canvas { 
-            background: #1a1a1a; 
-            border: 3px solid #333; 
-            border-radius: 16px; 
-            width: 92%; 
-            height: auto; 
-            box-shadow: 0 0 40px rgba(0,212,255,0.15); 
-            cursor: crosshair;
+            background: #1a1a1a; border: 3px solid #333; border-radius: 16px; 
+            width: 92%; height: auto; box-shadow: 0 0 40px rgba(0,212,255,0.15); 
         }
         
         .hud-header-tag { 
@@ -47,7 +36,6 @@
             font-size: 11px; color: #fff; background: rgba(30, 30, 30, 0.9); 
             padding: 8px 12px; border-radius: 8px; border: 1px solid #444;
             letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .stats-bar {
@@ -56,62 +44,58 @@
         }
         .stat-item { display: flex; align-items: center; gap: 4px; }
         .stat-red { color: var(--emergency-red); }
-        .stat-yellow { color: var(--warning-gold); }
         .stat-blue { color: var(--primary-blue); }
 
         #mainOverlay {
             position: absolute; top: 0px; left: 4%; right: 4%; bottom: 80px;
-            background: rgba(10, 10, 10, 0.95); border: 2px solid var(--primary-blue); border-radius: 20px;
+            background: rgba(10, 10, 10, 0.96); border: 2px solid var(--primary-blue); border-radius: 20px;
             display: flex; flex-direction: column; padding: 20px; z-index: 100;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
         }
 
-        .story-header { font-size: 22px; color: var(--emergency-red); font-weight: 900; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
+        .story-header { font-size: 18px; color: var(--emergency-red); font-weight: 900; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
         .story-text { 
-            font-size: 14px; color: #eee; margin-bottom: 15px; line-height: 1.5; 
+            font-size: 13px; color: #eee; margin-bottom: 15px; line-height: 1.5; 
             text-align: center; background: rgba(255,255,255,0.05); padding: 15px; 
-            border-radius: 12px; border-left: 4px solid var(--primary-blue);
-            transition: opacity 0.4s ease;
+            border-radius: 12px; border-left: 4px solid var(--primary-blue); min-height: 80px;
         }
-        
-        .question-text { font-size: 15px; margin-bottom: 15px; line-height: 1.4; color: #fff; font-weight: bold; }
         
         .option-btn { 
-            background: #252525; text-align: left; margin-bottom: 8px; padding: 14px; 
-            border-radius: 10px; font-size: 13px; border: 1px solid #444; width: 100%; color: white;
-            transition: all 0.2s ease; cursor: pointer;
+            background: #252525; text-align: left; margin-bottom: 8px; padding: 12px; 
+            border-radius: 10px; font-size: 12px; border: 1px solid #444; width: 100%; color: white;
+            cursor: pointer;
         }
-        .option-btn:active { transform: scale(0.98); background: #333; }
+        .option-btn:hover { background: #333; }
         
-        #feedbackMsg { font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 18px; display: none; padding: 10px; border-radius: 8px; }
+        #feedbackMsg { font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 16px; display: none; padding: 8px; border-radius: 8px; }
         .correct { color: var(--success-green); background: rgba(39, 174, 96, 0.1); }
         .wrong { color: var(--emergency-red); background: rgba(255, 62, 62, 0.1); }
 
         .form-group { margin-bottom: 12px; text-align: left; width: 100%; }
-        .form-group label { display: block; font-size: 10px; color: var(--primary-blue); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .form-group label { display: block; font-size: 10px; color: var(--primary-blue); margin-bottom: 5px; text-transform: uppercase; }
         .form-group input, .form-group select { 
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; 
             background: #111; color: white; box-sizing: border-box; font-size: 14px;
         }
 
         .ambo-avatar { width: 50px; height: 80px; margin: 0 auto 15px; position: relative; background: #fff; border-radius: 4px; border: 2px solid #ccc; }
-        .ambo-avatar::after { content: ''; position: absolute; top: 30px; left: 0; width: 100%; height: 12px; background: var(--emergency-red); }
+        .ambo-avatar::after { content: ''; position: absolute; top: 35px; left: 0; width: 100%; height: 12px; background: var(--emergency-red); }
         .siren-light {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            width: 30px; height: 10px; border-radius: 5px;
-            animation: flickerSiren 0.2s infinite alternate;
+            position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+            width: 34px; height: 8px; border-radius: 4px;
+            animation: flickerSiren 0.3s infinite alternate;
         }
         @keyframes flickerSiren {
-            0% { background: var(--emergency-red); box-shadow: 0 0 10px var(--emergency-red); }
-            100% { background: var(--primary-blue); box-shadow: 0 0 10px var(--primary-blue); }
+            0% { background: var(--emergency-red); box-shadow: 0 0 15px var(--emergency-red); }
+            100% { background: var(--primary-blue); box-shadow: 0 0 15px var(--primary-blue); }
         }
 
-        .progress-container { width: 92%; height: 8px; background: #222; border-radius: 10px; margin-top: 15px; overflow: hidden; border: 1px solid #333; }
+        .progress-container { width: 92%; height: 8px; background: #222; border-radius: 10px; margin-top: 15px; border: 1px solid #333; overflow: hidden; }
         #progressBar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary-blue), #00ff88); transition: width 0.4s ease; }
         
         .game-btn { padding: 16px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; letter-spacing: 1px; }
         .btn-green { background: var(--success-green); width: 100%; margin-top: 10px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
+        .reset-btn { background: none; border: none; color: #666; margin-top: 10px; font-size: 11px; cursor: pointer; text-decoration: underline; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -123,32 +107,31 @@
     </div>
 
     <div class="stats-bar">
-        <div class="stat-item stat-red">❌ ERRORS: <span id="qErrors">0</span></div>
-        <div class="stat-item stat-yellow">💥 CRASHES: <span id="crashCount">0</span></div>
+        <div class="stat-item stat-red">💓 STABILITY: <span id="stabilityDisplay">100</span>%</div>
         <div class="stat-item stat-blue">🏁 <span id="dist">0</span>m</div>
     </div>
     
     <canvas id="game" width="360" height="580"></canvas>
     
     <div id="mainOverlay">
-        <div id="screenStart" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+        <div id="screenStart" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
+            <div class="ambo-avatar"><div class="siren-light"></div></div>
             <h1 style="margin: 0; color: #fff; font-size: 28px;">🚑 AMBO</h1>
-            <p style="color: var(--warning-gold); font-size: 12px; letter-spacing: 2px; margin-bottom: 30px;">THE CLINICAL AMBULANCE</p>
-            <button class="game-btn btn-green" onclick="showScreen('screenDetails')">BEGIN MISSION</button>
+            <p style="color: var(--warning-gold); font-size: 11px; letter-spacing: 1px; margin-bottom: 30px;">Automated Module-Based Outcome for NTCP</p>
+            <button class="game-btn btn-green" onclick="showScreen('screenDetails')">START MISSION</button>
         </div>
 
         <div id="screenDetails" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
             <div class="story-header">DEPLOYMENT</div>
-            
             <div class="form-group">
                 <label>Training Module</label>
                 <select id="trainingModule">
-                    <option value="Acute Care">Acute Care Competency</option>
-                    <option value="Surgical Care">Surgical Care</option>
-                    <option value="Emergency Care Services">Emergency Care Services</option>
+                    <option value="emergency">Emergency Care</option>
+                    <option value="ambulatory">Ambulatory Care</option>
+                    <option value="basic">Basic Navigation</option>
+                    <option value="acute">Acute/Surgical Care</option>
                 </select>
             </div>
-
             <div class="form-group">
                 <label>Assigned Site</label>
                 <select id="playerSite">
@@ -157,7 +140,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Employee Number</label>
+                <label>Player Number</label>
                 <input type="number" id="playerNum" inputmode="numeric" placeholder="Enter employee number">
             </div>
             <button class="game-btn btn-green" onclick="validateDetails()">CONFIRM DISPATCH</button>
@@ -165,38 +148,48 @@
 
         <div id="screenBriefing" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
             <div class="ambo-avatar"><div class="siren-light"></div></div>
-            <div class="story-header">BRIEFING</div>
+            <div class="story-header">🚨 MISSION BRIEFING 🚨</div>
             <div id="storyContent" class="story-text"></div>
-            <button id="storyBtn" class="game-btn btn-green" onclick="nextStory()">NEXT</button>
+            <button id="storyBtn" class="game-btn btn-green" onclick="nextStory()">CONTINUE</button>
         </div>
 
         <div id="screenQuiz" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
             <div id="feedbackMsg"></div>
-            <div class="question-text" id="qText"></div>
+            <div id="qText" style="font-size: 14px; margin-bottom: 10px; font-weight: bold; line-height: 1.4;"></div>
             <div id="optionsContainer"></div>
+        </div>
+
+        <div id="screenResult" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
+            <div class="story-header" style="color: var(--success-green); font-size: 22px;">MISSION ACCOMPLISHED!</div>
+            <div id="finalStability" style="font-size: 55px; font-weight: bold; margin: 10px 0; color: #fff;">100%</div>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 2px;">PATIENT STABILITY SCORE</p>
+            <div id="finalSync" style="color: var(--warning-gold); font-weight: bold; margin-bottom: 15px; font-size: 14px;">SYSTEM SYNC: 0/30</div>
+            <div id="finalPlayerDisplay" style="color: var(--primary-blue); font-size: 16px; font-weight: bold; margin-bottom: 20px;"></div>
+            <div id="generatedCodeDisplay" style="background: #222; padding: 15px; border-radius: 8px; font-family: monospace; color: var(--primary-blue); font-size: 15px; margin-bottom: 15px; display: none; width: 85%; border: 1px solid #444;"></div>
+            <button id="genBtn" class="game-btn btn-green" onclick="generateFinalCode()">GENERATE COMPLETION CODE</button>
         </div>
     </div>
 
     <div class="progress-container"><div id="progressBar"></div></div>
-    <button onclick="location.reload()" style="background:none; border:none; color:#555; margin-top:10px; font-size:10px; cursor:pointer;">RESTART SIMULATION</button>
+    <button class="reset-btn" onclick="location.reload()">RESET SIMULATION</button>
 </div>
 
 <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const distText = document.getElementById('dist'), 
-          qErrorText = document.getElementById('qErrors'), 
-          crashText = document.getElementById('crashCount'), 
+          stabText = document.getElementById('stabilityDisplay'),
           hudPlayerID = document.getElementById('hudPlayerID'),
           hudModuleTitle = document.getElementById('hudModuleTitle'),
           progBar = document.getElementById('progressBar'), 
           mainOverlay = document.getElementById('mainOverlay'), 
           feedbackMsg = document.getElementById('feedbackMsg');
 
-    let distance = 0, crashes = 0, wrongAnswers = 0, currentQuestionIndex = 0;
-    let isPaused = true, inQuiz = false, gameStarted = false;
-    let spawnTimer = 0, roadOffset = 0, invincibilityFrames = 0, arriving = false, missionComplete = false;
-    let hospitalY = -400, storyPart = 0;
+    let distance = 0, stability = 100, currentQuestionIndex = 0, syncScore = 0;
+    let isPaused = true, inQuiz = false, gameStarted = false, arriving = false;
+    let roadOffset = 0, spawnTimer = 0, batchCount = 0, hospitalY = -600;
+    let nextMilestone = 1000, firstAttemptAtThisQuestion = true;
+    let playerIDValue = "";
 
     const ambulance = { x: 162, y: 480, w: 36, h: 70, speed: 7 };
     let traffic = [];
@@ -205,307 +198,307 @@
     window.addEventListener('keydown', e => keys[e.code] = true);
     window.addEventListener('keyup', e => keys[e.code] = false);
 
-    canvas.addEventListener('touchmove', (e) => {
-        if (isPaused || !gameStarted || inQuiz) return;
-        let rect = canvas.getBoundingClientRect();
-        let touchX = e.touches[0].clientX - rect.left;
-        let scaleX = canvas.width / rect.width;
-        ambulance.x = (touchX * scaleX) - (ambulance.w / 2);
-        if (ambulance.x < 15) ambulance.x = 15;
-        if (ambulance.x > canvas.width - ambulance.w - 15) ambulance.x = canvas.width - ambulance.w - 15;
-        e.preventDefault();
-    }, { passive: false });
+    function getBriefingText() {
+        return [
+            `"System online. Connection established. <b>Hello, Pilot ${playerIDValue}!</b> I am AMBO, your Automated Module-Based Outcome unit. I’ve been waiting for a partner with your clinical expertise."`,
+            `"We have a high-priority situation. The <b>Online Clinical Information System (O-CIS)</b> is under heavy load, and we need to deliver patient data to St. Luke’s Medical Center."`,
+            `"<b>Take the Wheel:</b> You're in control. <b>Drag me</b> or use <b>Arrow Keys</b> to navigate. Don't let the traffic slow us down!"`,
+            `"<b>The Stability Standard:</b> We’re starting at <b>100%</b>. This score stays on your HUD the entire mission—even during charting—so keep it high!"`,
+            `"<b>Collision Protocol:</b> Eyes on the road! Every collision hits us hard. A crash costs us <b>-100m of progress</b>, pushing our arrival time back."`,
+            `"<b>System Sync:</b> Every 1,000 meters, we must perform <b>EMR Charting</b>. I'll pause the drive, and you’ll face clinical questions to validate our data."`,
+            `"<b>Choose Wisely:</b> Your initial choice is recorded! If you make a mistake, my systems will lock. You cannot proceed until you find the correct answer."`,
+            `"Every clinical error permanently deducts <b>-2% from Patient Stability</b>. Ready to deploy?"`
+        ];
+    }
 
-    // --- UPDATED AMBO DIALOGUE WITH HTML BOLD TAGS ---
-    const amboStory = [
-        "Hey there, Partner! 👋 I'm <b>AMBO</b>, your clinical mission partner. We've got a patient in the back depending on us to get to the hospital. You ready to roll?",
-        "Precision is everything today. If you miss a clinical question, our patient's stability drops by <b>2%</b>. If you clip another car, that's a <b>5%</b> hit.",
-        "I'll handle the siren, you handle the steering. <b>Drag your finger</b> across the screen (or use <b>Arrow Keys</b>) to dodge traffic. We'll pause for chart updates every 1,000 meters.",
-        "Our patient's safety is in your hands. Let's show them why we're the best at St. Luke's. Launch when you're ready!"
-    ];
-
-    const emergencyQuestions = [
-        { q: "Which URL is used to access the O-CIS portal?", a: ["hospitalportal.stluke.com.ph:3031", "10.10.60.95:8081/login", "portal.stlukes.com.ph", "ocis.stlukes.com.ph"], correct: 2 },
-        { q: "Select which tab for Patient Full Name/DOB during registration?", a: ["Supplemental", "Demographics", "Visit", "Clinical"], correct: 1 },
-        { q: "Tick which option for critical patients to be admitted faster?", a: ["Licensed Census", "Non-Census", "Express Registration", "VIP"], correct: 2 },
-        { q: "What message appears if 'Search' finds no record?", a: ["Entry Not Found", "No Results Found", "User Unknown", "Create New"], correct: 1 },
-        { q: "Which unit should be selected for ED in QC during registration?", a: ["QC-ER", "QC-EMERGENCY", "QC-ED", "QC-TRIAGE"], correct: 2 },
-        { q: "Correct path to access scanning via OPAL?", a: ["File > Scan", "Tools > Opal Scanning", "Document > Start Scan", "Tools > Paper-Based"], correct: 1 },
-        { q: "What characterizes an O-CIS 'Significant Field'?", a: ["Cannot save if empty", "Can save but tagged 'Incomplete'", "Billing only", "Needs co-signer"], correct: 1 },
-        { q: "Action required to view a saved document?", a: ["Single-click name", "Click Summary", "Double-click specific document", "Tools > Viewer"], correct: 2 },
-        { q: "Co-signer radio button for Attending Physicians?", a: ["Other", "Current Provider", "Medical Director", "Referring"], correct: 1 },
-        { q: "How to add a comment to a Flowsheet cell?", a: ["Double-click", "Right-click > Enter Comment", "Actions button", "Summary Views"], correct: 1 },
-        { q: "Option to present Tracking Board on unit monitor?", a: ["Monitor View", "Display Board", "Unit Broadcast", "Full Screen"], correct: 1 },
-        { q: "Button to deactivate a flowsheet parameter no longer needed?", a: ["Delete", "Cancel", "Discontinue", "Remove"], correct: 2 },
-        { q: "Button to return to patient list from tracking board?", a: ["Exit Board", "Close", "Patient List", "Main Menu"], correct: 2 },
-        { q: "Where can the Order Entry Worksheet be accessed?", a: ["Main Toolbar only", "Main Toolbar or Patient Header", "Flowsheet only", "Registration"], correct: 1 },
-        { q: "Radio button for patient with no allergies?", a: ["N/A", "No Known Allergies", "Negative", "Unknown"], correct: 1 },
-        { q: "Besides browsing, how else to search clinical orders?", a: ["Barcode scan", "Type in search field", "Filter ICD10", "Recently Used"], correct: 1 },
-        { q: "What is the 'Allergy Summary View' during ordering?", a: ["Billing requirement", "System safety feature", "Medication error", "Required note"], correct: 1 },
-        { q: "Status of specimen order once endorsed to performing unit?", a: ["Pending Collection", "Received", "Collected", "Dispatched"], correct: 1 },
-        { q: "Co-signers required for Carrying Out Blood Transfusion?", a: ["None", "One", "Two", "Three"], correct: 2 },
-        { q: "Override reason if no barcode present for transfusion?", a: ["Emergency Use", "No Barcode Present", "System Offline", "Manual Entry"], correct: 1 },
-        { q: "Mandatory for High Alert Medication (HAM) validation?", a: ["Physician verbal", "Witnessed/Co-Signature", "ICD10 code", "Consent"], correct: 1 },
-        { q: "Rx Verify Override Reason for ER medications?", a: ["Pharmacy Closed", "Emergency Situation", "Doctor's Request", "Life Threatening"], correct: 1 },
-        { q: "Which URL is specifically for CSS Charging in SLB?", a: ["10.10.60.95:8081", "hospitalportal.stluke.com.ph:3031", "portal.stlukes.com.ph", "css.stlukes.ph"], correct: 1 },
-        { q: "Where to find encoded items before submitting in SLB?", a: ["Pending List", "Supply Inventory", "Order Cart", "Checked Items"], correct: 2 },
-        { q: "Page to update financial class (HMO/Individual)?", a: ["O-CIS Registration", "E.R. Landing Page", "Demographics", "Billing"], correct: 1 },
-        { q: "Required printout for CSS department claiming?", a: ["Orders/Charges screenshot", "Patient ID", "Physician Order", "Admission form"], correct: 0 },
-        { q: "Requirement for Discharge Diagnosis in legal docs?", a: ["Physician Sign", "ICD10 code", "Time", "Patient PIN"], correct: 1 },
-        { q: "Order that stops further entries in patient chart?", a: ["Discharge Patient", "For Billing Discharge", "Ready for Billing", "Stop All Orders"], correct: 2 },
-        { q: "Request type for replacement of busted lights in Patient Flow?", a: ["FME-Electrical Engineering", "BMED", "Housekeeping", "IT Support"], correct: 0 },
-        { q: "Document automatically printed after discharge visit?", a: ["Pharmacy Slip", "GATE PASS", "Billing Statement", "Clinical Summary"], correct: 1 }
-    ];
-
-    const acuteCareQuestions = [
-        { q: "Which URL should be used to access the St. Luke’s portal for O-CIS?", a: ["stlukes.com.ph", "portal.stlukes.com.ph/", "ocis.stlukes.com.ph", "hospitalportal.stlukes.com.ph"], correct: 1 },
-        { q: "When creating a Personal Visit List, which button must be held down to select multiple assigned patients?", a: ["Shift", "Alt", "CTRL", "Command"], correct: 2 },
-        { q: "What is the specific name of the production environment for O-CIS?", a: ["OCIS-TEST", "OCIS-PROD", "OCIS-LIVE", "OCIS-MAIN"], correct: 1 },
-        { q: "Where is the 'Enter Order' button located in the EMR interface?", a: ["CHART LEVEL Toolbar", "Options Panel", "Patient Header", "Flowsheet Tab"], correct: 2 },
-        { q: "What information is required every time a nurse submits an order for authentication?", a: ["Employee ID", "Fingerprint Scan", "Password", "Manager’s Approval"], correct: 2 },
-        { q: "Which 'Session Type' should be chosen when entering a standard medical order?", a: ["Emergency", "Standard", "Urgent", "Routine"], correct: 1 },
-        { q: "How can a nurse modify an order in the Cart but not yet submitted?", a: ["Right-click Delete", "Double-click order or Edit", "Must be re-entered", "Contact IT"], correct: 1 },
-        { q: "Which tab is used to create a 'Pending Incoming Visit List'?", a: ["Patient List", "Clinical Summary", "Orders", "Flowsheet"], correct: 0 },
-        { q: "Transferring a patient to a different room, which section is used?", a: ["Temporary", "Assigned", "Ancillary", "Discharge"], correct: 1 },
-        { q: "When AN ADMITTED patient is moved to an ancillary department (like Radiology) FOR A PROCEDURE, which section of the Location icon is used?", a: ["Assigned", "Permanent", "Temporary", "Outpatient"], correct: 2 },
-        { q: "What happens if a field tagged as 'Significant' is left blank?", a: ["Cannot save", "Saves but tagged 'Incomplete'", "System fills N/A", "Prevents logout"], correct: 1 },
-        { q: "Which assessment tool is specifically used for pediatric fall risk?", a: ["Morse Fall Risk", "Humpty Dumpty Fall Risk", "Obstetric Fall Risk", "Braden Scale"], correct: 1 },
-        { q: "How do you add a new time column to a flowsheet?", a: ["File > New Column", "Column Options or right-click gray area", "Drag and drop", "Automatic"], correct: 1 },
-        { q: "To remove a parameter flowsheet entered in error, which action is used?", a: ["Delete", "Cancel", "Discontinue", "Hide"], correct: 1 },
-        { q: "In Medication History, what does a RED circle icon indicate?", a: ["History complete", "Not collected/started", "No allergies", "High-alert meds"], correct: 1 },
-        { q: "What are the first two steps in the KBMA workflow?", a: ["Scan drug, scan patient", "Scan patient barcode, scan drug barcode", "Check ID, ask name", "Open MAR, scan drug"], correct: 1 },
-        { q: "What is required when administering High Alert Medications (HAM)?", a: ["Physician verbal", "Witnessed/Co-Signature", "Pharmacy approval", "2nd patient scan"], correct: 1 },
-        { q: "Tool used to coordinate with Pharmacy regarding a medication refill?", a: ["Order Worksheet", "Order Message Manager", "Flowsheet Comments", "Signature Manager"], correct: 1 },
-        { q: "Under what circumstance would a nurse 'Suspend' a medication?", a: ["Patient sleeping", "Patient on NPO Pre-Op", "Out of stock", "Later dose request"], correct: 1 },
-        { q: "Document to be printed (1 copy) before claiming blood product?", a: ["Admission Note", "Consent for Blood Transfusion", "Vital Signs", "Lab Results"], correct: 1 },
-        { q: "When carrying out a blood transfusion in the Worklist, what must be selected if THE PRODUCT HAS NO BARCODE for verification?", a: ["Manual Entry", "No Barcode Present", "Override Manager", "Emergency Release"], correct: 1 },
-        { q: "How many co-signers are required for Carrying Out Blood Transfusion?", a: ["One", "Two", "Three", "None"], correct: 1 },
-        { q: "Which system is used for charging miscellaneous supplies and clinical equipment?", a: ["O-CIS", "SLB (St. Luke's Billing)", "OPAL", "Patient Flow"], correct: 1 },
-        { q: "What must be printed for CSS claiming after encoding in SLB?", a: ["Patient Header", "Supplies tab screenshot (2 copies)", "Medical Record", "MD Order"], correct: 1 },
-        { q: "Which tool is used to SUBMIT A MAINTENANCE REQUEST?", a: ["Worklist Manager", "Patient Flow", "Order Entry", "Clinical Summary"], correct: 1 },
-        { q: "Which order in OCIS stops further entries in the chart?", a: ["Discharge Patient", "Ready for Billing", "Final Summary", "Gate Pass"], correct: 1 },
-        { q: "To pull up medication instructions created by MDs into the nursing discharge note, which FEATURE is used?", a: ["Refresh", "GET MED LIST", "Import Data", "Sync"], correct: 1 },
-        { q: "What is required for the 'For Billing Discharge' option to appear in the SLB Nursing Unit landing page?", a: ["The patient must be physically out of the room", "A CORE discharge order made", "All laboratory results must be complete", "The patient must have paid their bill in full"], correct: 1 },
-        { q: "What is the 'Read Only Environment' (ROE) used for?", a: ["Edit orders", "BCP when system is down", "Student practice", "Admin data"], correct: 1 },
-        { q: "Specific browser URL to access ROE at St. Luke’s QC?", a: ["portal.stlukes.ph", "slmcqcprodbcs4/bcs/login", "backup.stlukes.ph", "roe.stlukes.ph"], correct: 1 }
-    ];
-
-    const surgicalCareQuestions = [
-        { q: "Which EMR module is used to LOG a new outpatient visit?", a: ["Scheduling", "Registration", "Surgery Care", "Flowsheets"], correct: 1 },
-        { q: "When registering a patient who is not yet at the hospital, what status should the visit be set to?", a: ["Adm/Arr", "Pre-Reg", "Outpatient", "In-Patient"], correct: 1 },
-        { q: "In which registration tab are the 'Care Level' and 'Attending Provider' fields located?", a: ["Basic Tab", "Visit Criteria", "Visit Demographics", "Location"], correct: 2 },
-        { q: "According to the GUIDELINES, how should patient information be typed into the registration window?", a: ["lowercase", "Sentence case", "UPPERCASE", "Italicized"], correct: 2 },
-        { q: "Which electronic device is used for capturing patient signatures on digital consent forms?", a: ["Stylus Pen", "TOPAZ", "Tablet PC", "Scanner"], correct: 1 },
-        { q: "To book a surgical case via Demand Booking, what button must be clicked after highlighting the patient name?", a: ["Create New Visit", "Edit Patient/Book", "Add Procedure", "Schedule Roster"], correct: 1 },
-        { q: "Which values autopopulate in the 'Supplemental Info' tab once a specific procedure is selected?", a: ["Surgeon and Anesthesiologist", "Date and Room Number", "Description, Preference Card, and Duration", "MRN and Visit Number"], correct: 2 },
-        { q: "If a procedure requires specific anatomical details (e.g., Left or Right), which fields must be filled?", a: ["Location and Unit", "Laterality and Site", "Primary and Secondary", "Code and Description"], correct: 1 },
-        { q: "Where should the case 'Confirmation Code' be documented during the booking process?", a: ["Visit Demographics", "Patient Header", "Booking Comments", "Case Status"], correct: 2 },
-        { q: "Which of the following DOCUMENTS IS ACCOMPLISHED PRIOR SURGERY/PROCEDURE?", a: ["PreOp Nursing Note", "IntraOp Record", "Post Op Nursing Note", "Recovery Discharge"], correct: 0 },
-        { q: "When using Ad-Hoc Booking, which menu bar option is selected to enter a surgical case?", a: ["File", "Registration", "Surgery", "Tools"], correct: 2 },
-        { q: "Who is responsible for updating Preference Cards with new items?", a: ["Surgeon", "OR/DR Nurse Unit Manager", "CSS Staff", "IT Support"], correct: 1 },
-        { q: "To update case participants (Surgeons/Anesthesiologists), which tab in Surgery Case Details must be opened?", a: ["Case Usage", "Intra-op", "Supplemental Info", "Document Info"], correct: 1 },
-        { q: "During an ongoing case, in which column should you adjust the quantity of items used?", a: ["Qty column", "Used column", "Planned column", "Status column"], correct: 1 },
-        { q: "What is the first step when documenting and charging for an Implant?", a: ["Search for CHRG ANS", "Open Surgery Case List", "Click on 'Implants' on the Main Toolbar", "Click Add New Visit"], correct: 2 },
-        { q: "If an implant price is unavailable, what amount should be encoded in the system?", a: ["1.00", "0", "Market Value", "Leave it blank"], correct: 1 },
-        { q: "What must be done immediately after a surgical specimen is collected to begin EMR documentation?", a: ["Print Case List", "Right click the specimen order and select 'Add Specimen...'", "Close the patient chart", "Open the PACU Flowsheet"], correct: 1 },
-        { q: "To print a specimen label, what technical detail must be copied from the order window?", a: ["Patient MRN", "Visit Number", "Order ID", "Surgeon Name"], correct: 2 },
-        { q: "Which policy governs 'Specimen Collection, Identification and Handling'?", a: ["Leadership 1-114-2", "Patient Care and Safety 1-47-6", "Clinical Records Management 1-13-7", "Regulatory 1-15-2"], correct: 1 },
-        { q: "In the 'Add Specimen' window, what specific INFORMATION is required?", a: ["Arrival Time", "Collection Start Date and Start Time", "Pathology Receipt Time", "Surgeon Approval Time"], correct: 1 },
-        { q: "Which icon facilitates the patient location update from OR to PACU?", a: ["Enter Document icon", "Change Location icon", "Enter Order icon", "Signature Manager icon"], correct: 1 },
-        { q: "What radio button is selected in the 'Effective' section for an immediate patient transfer?", a: ["Now", "Date & Time", "Pre-Reg", "Schedule"], correct: 0 },
-        { q: "Which flowsheet must be searched for and added during recovery documentation?", a: ["Intake and Output", "Assessment and Cares", "PACU Flowsheet", "Plan of Care"], correct: 2 },
-        { q: "How do you set a documentation frequency (e.g., every 15 minutes) on a flowsheet?", a: ["Click 'Add Parameter'", "Use the Save Options in the Options Panel to fill out Frequency", "Right click on the time column", "Click 'Modify Row Label'"], correct: 1 },
-        { q: "What is the correct method to remove data accidentally entered into a flowsheet cell?", a: ["Use the Delete key", "Right click and select 'Delete Cell Data'", "Click 'Cancel Parameter'", "Highlight and type 'X'"], correct: 1 },
-        { q: "When finalizing case usage, who performs the final checking of review items and quantities?", a: ["RN", "CSS", "CN (Charge Nurse)", "Unit Manager"], correct: 2 },
-        { q: "If the Planned Procedure matches the Performed Procedure, what must the nurse check?", a: ["The Add icon", "The 'Performed' tickbox", "The 'Post Selected' icon", "The 'Save' button"], correct: 1 },
-        { q: "After clicking the 'Post Selected' icon in the Charges tab, the status changes from Pending Post to what?", a: ["Transmitted", "Posted", "Verified", "Closed"], correct: 1 },
-        { q: "Which module is used to verify that charges were successfully transmitted to the SLB system?", a: ["Charges Entry, Adjustment and Cancellation (CEAC)", "Nursing Special Units Landing Page", "Surgery Case List", "Business Continuity Solution"], correct: 0 },
-        { q: "What must be ticked to remove the temporary location from the patient's header?", a: ["Change Location", "Clear Current Temporary Location", "Arrive/Cancel Arrival", "Discontinue"], correct: 1 }
-    ];
+    const allQuestions = {
+        emergency: [
+            { q: "What is the full name of the O-CIS system?", a: ["Offline Clinical Integrated Software", "Optimal Care Information System", "Online Clinical Information System", "Organized Clinical Input System"], correct: 2 },
+            { q: "What is the correct format for an O-CIS username?", a: ["Full Last Name + First Name Initial", "First Name + Middle Initial + Last Name", "Employee ID Number", "Initials of First Name/s + Middle Initial + Full Last Name"], correct: 3 },
+            { q: "Which keyboard shortcut is used to quickly lock a computer screen for security?", a: ["Alt + F4", "Ctrl + Shift + Esc", "Windows key + L", "Alt + Tab"], correct: 2 },
+            { q: "On the Tracking Board, what does a 'Lab' icon with a white background with pencil signify?", a: ["Results are final", "The Lab order is pending collection", "Specimen received", "Order cancelled"], correct: 1 },
+            { q: "Which dashboard icon indicates that microbiology order status is unreviewed results?", a: ["Micb with a blue checkmark", "Micb with a gray circle", "Micb with a red exclamation mark (!)", "Micb with a blue letter 'i'"], correct: 0 },
+            { q: "What does the 'e12' icon represent?", a: ["12 resources needed", "Room 12e", "Delayed 12h", "Previous ED visit within last 12h"], correct: 3 },
+            { q: "In the Worklist Manager, what color do medication tasks turn when they are 60 mins past due?", a: ["Yellow", "Orange", "Red", "Purple"], correct: 2 },
+            { q: "In Registration, If a patient has no middle name, enter:", a: ["N/A", "None", "A Dash (-)", "Leave blank"], correct: 2 },
+            { q: "Which application is used to update the patient's 'Account Class' (HMO/Individual)?", a: ["O-CIS Toolbar", "St. Luke’s Billing (SLB)", "Patient Flow", "Citrix"], correct: 1 },
+            { q: "Which ESI Level is assigned to a patient requiring 'immediate life-saving intervention'?", a: ["ESI Level 1", "ESI Level 2", "ESI Level 3", "ESI Level 5"], correct: 0 },
+            { q: "Under ESI guidelines, how many 'resources' for labs and an X-ray?", a: ["One", "Two", "Three", "Zero"], correct: 1 },
+            { q: "What does the acronym ROE stand for during a system downtime?", a: ["Recovery Engine", "Read Only Environment", "Remote Output", "Real-time Entry"], correct: 1 },
+            { q: "System downtime: ROE pulls flowsheet data from the past how many hours?", a: ["12 hours", "24 hours", "48 hours", "72 hours"], correct: 2 },
+            { q: "Which manual form is used for doctors' progress notes and orders during downtime?", a: ["Triage Form", "Nurses' Notes", "DPNOS", "Patient Information Sheet"], correct: 2 },
+            { q: "What must be done with manual paper forms once system is back online?", a: ["Shredded", "Re-entered manually", "Scanned into Opal", "Filed in binder"], correct: 2 },
+            { q: "In the Patient Flow application, what does status code 'RACK' stand for?", a: ["Request Active", "Room Assigned", "Acknowledged", "Recovery Area Check"], correct: 2 },
+            { q: "To claim CSS items in SLB, how many printed copies are required?", a: ["One", "Two", "Three", "Four"], correct: 1 },
+            { q: "Which specific fall risk assessment tool is used for pediatric patients?", a: ["Morse Fall Risk", "Humpty Dumpty Fall Risk", "General Assessment", "Prevention Agreement"], correct: 1 },
+            { q: "At what age is a patient automatically high risk for falls under Morse tool?", a: ["55 and above", "60 and above", "65 and above", "70 and above"], correct: 2 },
+            { q: "What document is required for a patient to leave the ER once bill is settled?", a: ["Final Receipt", "Gate pass", "Signed Waiver", "Medical Certificate"], correct: 1 },
+            { q: "Which O-CIS toolbar button locks application for a short period?", a: ["Shutdown", "Suspend", "User Preferences", "Help"], correct: 1 },
+            { q: "Nurse checks what in SLB during discharge to ensure charges clear?", a: ["Triage Priority", "Room Assignment", "Invalid and Pending Transactions", "Demographics"], correct: 2 },
+            { q: "Who enters the Disposition Note in OCIS?", a: ["MD and CP", "MD only", "MD and RN", "RN and CP"], correct: 2 },
+            { q: "Upon endorsement, who will tag the patients to the incoming nurse?", a: ["Outgoing nurse", "Incoming nurse", "Charge nurse", "Outgoing charge nurse"], correct: 0 },
+            { q: "In 'Enter Document', what does a 'Significant Field' (Blue Asterisk) indicate?", a: ["Cannot save until filled", "Can save, but will be tagged as Incomplete", "Mandatory field", "Physician signature required"], correct: 1 },
+            { q: "How many clinicians are required to verify blood products before transfusion?", a: ["One", "Two", "Three", "Four"], correct: 1 },
+            { q: "In the Emergency Department Process Flow, what is Step 1?", a: ["Vital Signs", "Room Assignment", "Registration at Triage Area", "Laboratory Tests"], correct: 2 },
+            { q: "What is the name of the automated dispensing cabinet for medications?", a: ["Zebra", "Topaz", "Omnicell", "Fujitsu"], correct: 2 },
+            { q: "Which device is specifically used for signing electronic document files?", a: ["Specimen Printer", "Fujitsu Scanner", "Topaz E-Signature Pad", "Barcode Scanner"], correct: 2 },
+            { q: "Manual form used to procure items from Pharmacy or CSS during downtime:", a: ["Doctor’s Order Sheet", "Patient Account Charge (PAC)", "Medical Certificate", "Triage Form"], correct: 1 }
+        ],
+        ambulatory: [
+            { q: "Software required to launch O-CIS environment:", a: ["Adobe Reader", "Google Chrome", "Citrix Workspace/Receiver", "Edge"], correct: 2 },
+            { q: "Portal address used to access O-CIS system:", a: ["ocis.stlukes.com.ph", "portal.stlukes.com.ph", "stlukes.citrix.com", "emr.stlukes.ph"], correct: 1 },
+            { q: "Gateway icon used to 'Suspend' or lock app:", a: ["Red power", "Green question", "Purple crescent moon", "Blue eyeglasses"], correct: 2 },
+            { q: "Toolbar icon to Shutdown (exit/close) Sunrise:", a: ["Suspend", "Red power button", "User Preferences", "Recently Viewed"], correct: 1 },
+            { q: "Where to set default Sunrise app for startup:", a: ["Main Toolbar", "Chart Level", "User Preferences (General Tab)", "Citrix Storefront"], correct: 2 },
+            { q: "Information used to search patient in 'Find Visit':", a: ["Last Name", "MRN", "Visit Number", "All of the above"], correct: 3 },
+            { q: "Why ask if patient has existing PIN during registration?", a: ["Check billing", "To avoid double MRN", "Verify insurance", "Check allergies"], correct: 1 },
+            { q: "Standard text format for patient names in registration:", a: ["Sentence case", "ALL CAPS (CAPS LOCK)", "lowercase", "Title Case"], correct: 1 },
+            { q: "Missing middle name in registration protocol:", a: ["Leave blank", "Put N/A", "Put a DASH (-)", "Type NONE"], correct: 2 },
+            { q: "Function to document physical arrival of patient to ANS unit:", a: ["Register Now", "Pre-Reg", "Arrive/Cancel Arrival", "Change Location"], correct: 2 },
+            { q: "Trigger order to initiate payment processing in SLB:", a: ["Discharge Order", "Pharmacy Order", "Ready for Billing", "Lab Order"], correct: 2 },
+            { q: "Current Providers radio button represents:", a: ["Nurse entering", "Attending and Referral MDs", "Fellows/Residents", "Billing Dept"], correct: 1 },
+            { q: "Field used to manually modify the title of a document:", a: ["Document Name", "Document Topic", "Sections", "Source"], correct: 1 },
+            { q: "Left 'Significant' field blank means:", a: ["Cannot save", "Document can only be saved as 'Incomplete'", "Fills N/A", "Prevents logoff"], correct: 1 },
+            { q: "Function to copy details from previous notes:", a: ["Refer to Note", "Modify Template", "Copy Forward", "Expansion"], correct: 2 },
+            { q: "Knowledge Based Medication Administration (KBMA) purpose:", a: ["Drug cost", "Use patient/med barcodes to validate", "Print labels", "Order meds"], correct: 1 },
+            { q: "First two steps in KBMA workflow:", a: ["Scan drug then patient", "Scan patient barcode then medication barcode", "Check ID then ask name", "Open MAR then scan drug"], correct: 1 },
+            { q: "Worklist Manager: color RED indicates task is:", a: ["Continuous", "Scheduled", "Overdue (60 mins past due)", "PRN"], correct: 2 },
+            { q: "Validation requirement for High Alert Medications (HAM):", a: ["MD signature", "A Witness or Co-Signature", "Verbal consent", "Pharmacy approval"], correct: 1 },
+            { q: "Action for 'No Match on Scan' error:", a: ["Administer anyway", "Discard initial scan and re-verify", "Override", "Type name"], correct: 1 },
+            { q: "Add flowsheet not visible in selection:", a: ["Add Parameter", "Click the '+' (Plus) icon", "Main Toolbar", "Right-click"], correct: 1 },
+            { q: "Assessment tool for patient risk for falling:", a: ["NIHSS", "Morse Fall Scale", "GCS", "Braden"], correct: 1 },
+            { q: "MD Allergy Review window (Inpatients):", a: ["2 hours", "4 hours", "8 hours", "24 hours"], correct: 2 },
+            { q: "Result if allergies NOT reviewed by MD within 8h:", a: ["Auto-discharge", "Entering of orders will not be allowed", "Billing notified", "Nurse re-enters"], correct: 1 },
+            { q: "Icon in EMR signifying abnormal laboratory result:", a: ["Red exclamation", "Red Flag", "Green Flag", "Yellow Flag"], correct: 3 },
+            { q: "Environment providing 'Read-Only' access during downtime:", a: ["PROD", "ROE", "TRAIN", "TEST"], correct: 1 },
+            { q: "Tab to view scanned loose documents/prescriptions:", a: ["Results", "Flowsheets", "Document Management", "Timeline"], correct: 2 },
+            { q: "Policy placement for 'SCANNED' stamp on physical documents:", a: ["Top right", "Center", "Left lower portion", "Back"], correct: 2 },
+            { q: "Paper form for multidisciplinary assessment during downtime:", a: ["Admission Note", "MIAD", "Order Entry", "Case Usage"], correct: 1 },
+            { q: "Accessing St. Luke's Billing (SLB) system:", a: ["OCIS Toolbar", "Gateway", "SLMC Enterprise Portal login", "Signature pad"], correct: 2 }
+        ],
+        basic: [
+            { q: "O-CIS system portal address:", a: ["ocis.stlukes.com.ph", "portal.stlukes.com.ph", "stlukes.citrix.com", "emr.stlukes.ph"], correct: 1 },
+            { q: "App to launch O-CIS environment:", a: ["Adobe", "Chrome", "Citrix Workspace/Receiver", "Edge"], correct: 2 },
+            { q: "Contact for missing Chrome/Citrix on device:", a: ["Unit Manager", "HR", "IT (local 4206/5520)", "HCA"], correct: 2 },
+            { q: "Credentials for St. Luke's Enterprise Portal:", a: ["Employee ID", "Personal email", "Domain account", "Citrix key"], correct: 2 },
+            { q: "Add app to 'Favorites' in Citrix by:", a: ["Right-click", "Highlight the star", "Drag icon", "Contact IT"], correct: 1 },
+            { q: "NOT a core value of SLMC:", a: ["Integrity", "Profitability", "Accountability", "Teamwork"], correct: 1 },
+            { q: "Gateway Toolbar icon for 'Suspend' (short lock):", a: ["Red power", "Green question", "Purple crescent moon", "Blue eyeglasses"], correct: 2 },
+            { q: "Gateway icon for 'Shutdown':", a: ["Suspend", "Red power button", "Preferences", "eyeglasses"], correct: 1 },
+            { q: "Set default startup application in:", a: ["Main Toolbar", "Chart Level", "User Preferences Settings (General Tab)", "Citrix Storefront"], correct: 2 },
+            { q: "Recently Viewed Patient (Eyeglasses) icon shows:", a: ["Insurance", "Recently viewed patient at 'By Patient' tab", "Lab results", "Shift summary"], correct: 1 },
+            { q: "First step to find specific patient visit:", a: ["Flowsheet", "Double-click 'Find Visit' icon", "Clinical Summary", "Reports"], correct: 1 },
+            { q: "Find Visit search criteria includes:", a: ["Last Name", "MRN", "Visit Number", "All of the above"], correct: 3 },
+            { q: "Goal of IPSG 1 is to:", a: ["Communication", "Identify Patients Correctly", "Reduce falls", "Prevent infection"], correct: 1 },
+            { q: "Patient header details include:", a: ["Age/Gender", "Status", "MRN", "All of the above"], correct: 3 },
+            { q: "Header display for patient at risk for fall:", a: ["Strict Bedrest", "Precautions: Fall", "High Alert", "NPO"], correct: 1 },
+            { q: "Tab serving as nurse hand-off tool during endorsement:", a: ["Orders", "Results", "Clinical Summary Tab", "Document Management"], correct: 2 },
+            { q: "Icon access to Modified Fall Risk Assessment:", a: ["Enter Document", "Enter Order", "Worklist", "Flowsheet"], correct: 0 },
+            { q: "Flowsheet Manager assessment tool for fall risk:", a: ["NIHSS", "Morse Fall Scale", "GCS", "Braden"], correct: 1 },
+            { q: "CLABSI stands for:", a: ["Laboratory Integration", "Central Line Associated Bloodstream Infection", "Basic System Info", "Life Intervention"], correct: 1 },
+            { q: "Flowsheet bundle for patient on artificial airway:", a: ["Fall Prevention", "Intake/Output", "Ventilator-Associated Pneumonia (VAP) Bundle", "Access Devices"], correct: 2 },
+            { q: "Location of 'Print Reports' icon:", a: ["Patient Info", "On the Main Toolbar", "Citrix Launcher", "Login screen"], correct: 1 },
+            { q: "Report Category to print clinical document:", a: ["Administrative", "Results", "Documents", "Patient Lists"], correct: 2 },
+            { q: "Purpose of 'Preview' button in report selection:", a: ["Finalize", "Check the document before printing", "Edit text", "Save PDF"], correct: 1 },
+            { q: "Report for PhilHealth claim form:", a: ["CF3 Report", "Transfer Note", "Discharge Summary", "Med Certificate"], correct: 0 },
+            { q: "Correct Report Category for laboratory results:", a: ["Documents", "Results", "Orders", "Administrative"], correct: 1 },
+            { q: "BCP stands for:", a: ["Basic Care Plan", "Billing Process", "Business Continuity Plan", "Backup Portal"], correct: 2 },
+            { q: "Environment for 'Read-Only' downtime access:", a: ["TEST", "ROE", "TRAIN", "SLB-DATA"], correct: 1 },
+            { q: "Downtime paper form for Admission Note Nursing:", a: ["Administration", "Multi-Disciplinary Initial Assessment Database", "Monthly Audit", "Inventory"], correct: 1 },
+            { q: "Age range for MIAD Pediatric form:", a: ["Birth-28d", "29 Days to 18 years and 364 days old", "19y+", "Over 65y"], correct: 1 },
+            { q: "Access St. Luke's Billing (SLB) through:", a: ["OCIS Toolbar", "Gateway", "SLMC Enterprise Portal login", "Google Chrome"], correct: 2 }
+        ],
+        acute: [
+            { q: "Bedside nurse EMR access protocol:", a: ["Pathology COW", "the COW/WOW of the Nursing Unit where I am on duty", "Any unit COW", "Any IT device"], correct: 1 },
+            { q: "Submit password SARF to:", a: ["IT USG", "Unit Manager", "HCA", "Data Analytics"], correct: 0 },
+            { q: "Color/Symbol for emergency value needing immediate action:", a: ["Green check", "Blue exclamation", "Red exclamation mark", "Green box"], correct: 2 },
+            { q: "Green checkmark next to vital sign indicates:", a: ["Danger high", "Normal and verified", "Broken sensor", "Not seen by MD"], correct: 1 },
+            { q: "Menu for printing prescriptions:", a: ["Print Reports", "Prescription Writer", "Enter Document", "Enter Order"], correct: 0 },
+            { q: "Icon for value out of range but not life-threatening:", a: ["Blue exclamation mark", "Red exclamation", "Green check", "Grey heart"], correct: 0 },
+            { q: "Lab status signified by icon with pencil in corner:", a: ["Received", "Critical", "Pending Collection", "Final Reviewed"], correct: 2 },
+            { q: "Green refresh/cycle arrow on lab icon signifies:", a: ["The specimen has been collected.", "Results critical", "Pending collection", "Lab received"], correct: 0 },
+            { q: "Red refresh arrow on lab icon indicates:", a: ["Results corrected", "Lab received", "Specimen not collected for >29 mins", "Collection complete"], correct: 2 },
+            { q: "Blue refresh arrow on lab icon indicates:", a: ["Collected", "Pending", "Critical", "Received by Performing Unit"], correct: 3 },
+            { q: "Blue checkmark on lab icon indicates:", a: ["Pending collection", "Final results reviewed or corrected", "Received", "Results critical"], correct: 1 },
+            { q: "Red exclamation on tracking board indicates:", a: ["Not collected >24h", "Critical Value", "Received", "Final reviewed"], correct: 1 },
+            { q: "Demographic data text format policy:", a: ["ALL CAPS", "Does not matter", "Title Caps", "lowercase"], correct: 0 },
+            { q: "No middle name protocol:", a: ["N/A", "-", "NA", "/"], correct: 1 },
+            { q: "Inpatient procedure scheduling visit protocol:", a: ["Use 'Admitted/Arrived' visit number", "New visit", "None of above", "PreReg visit number"], correct: 0 },
+            { q: "Surgical Case confirmation timeframe:", a: ["Day of", "4h prior", "Week before", "The night prior the procedure"], correct: 3 },
+            { q: "Tagging of Surgical Time Markers protocol:", a: ["OR Tech needed", "In real-time", "In PACU", "After procedure"], correct: 1 },
+            { q: "Clinical Document NOT entered by nurse:", a: ["PreOp Note", "Admission Note Nursing", "PreOp Nursing Note", "Transfer Note"], correct: 0 },
+            { q: "First EMR step for ER Admission arrival:", a: ["Mark worklist done", "Change Temporary Location", "Change Assigned Location to designated room", "Add to visit list"], correct: 2 },
+            { q: "Unit view for incoming admissions:", a: ["Personal Visit List", "Pending Incoming Visit List", "Patients Logbook", "Patient Flow"], correct: 1 },
+            { q: "Form for admitting 19-year-old patient:", a: ["Pediatric Note", "Admission Note Nursing", "Newborn Note", "Obstetric Note"], correct: 1 },
+            { q: "Action to add Home Medications during history interview:", a: ["Prescription Writer", "Order Reconciliation", "Allergies Summary", "Add Item"], correct: 1 },
+            { q: "Action to add allergies during history interview:", a: ["Order Reconciliation", "Allergies Summary", "Add Item", "Prescription Writer"], correct: 1 },
+            { q: "Infusion Pump worklist tasks marked done:", a: ["Before EOS", "Before midnight", "Every hour", "Once performed"], correct: 1 },
+            { q: "Continuous oxygen therapy worklist tasks marked done:", a: ["Every end of shift", "Every midnight", "Every hour", "Start of shift"], correct: 0 },
+            { q: "POCT CBG in worklist manager marked done:", a: ["Every shift", "After 8 hours", "Every hour", "When performed"], correct: 3 },
+            { q: "Request additional doses for medication wastage via:", a: ["Outpatient Review", "Order Recon", "Prescription Writer", "Order Message Manager"], correct: 3 },
+            { q: "Charge Nurse protocol before First Dose check:", a: ["Add comment 'First Dose Checked'", "Mark as done", "Enter Username/PW for check", "Administer"], correct: 0 },
+            { q: "Medication rescheduling protocol:", a: ["Charge Nurse instructions", "No need (automated)", "After first dose/outside window", "After each dose"], correct: 2 },
+            { q: "Protocol for endorsing remaining multidose vials:", a: ["adding a comment on the medication inside worklist manager", "Comment on flowsheet", "Verbal only", "Clinical document"], correct: 0 },
+            { q: "Appendectomy med from general unit uses KBMA (T/F):", a: ["FALSE", "TRUE"], correct: 1 },
+            { q: "Activate Request for Blood Pickup via:", a: ["Worklist", "the Orders Tab", "Enter Order", "KBMA"], correct: 1 },
+            { q: "Document for Blood Transfusion reactions:", a: ["Flowsheet", "Assessment and Cares", "Blood Transfusion Reaction Note", "Summary"], correct: 2 },
+            { q: "Plan of Care accomplishment frequency:", a: ["Every hour", "Every shift", "every problem occurrence", "As necessary"], correct: 2 },
+            { q: "Peri-Op Nurse documentation includes:", a: ["PreOp Nursing Note", "Intra-Op Record", "Surgery Case Details", "All of the Above"], correct: 3 },
+            { q: "Listing used procedure equipment in Surgical Case List:", a: ["Post-Op", "Case Usage", "Case Header", "Intra-Op"], correct: 1 },
+            { q: "Add new flowsheet in criteria via:", a: ["Enter Document", "Create Referral", "Plus Sign", "Flowsheet Manager"], correct: 2 },
+            { q: "Clinical documentation for Critical Values:", a: ["Critical Results Notification", "Value Flowsheet", "Result Summary", "None"], correct: 0 },
+            { q: "Physician Order Reconciliation protocol:", a: ["Transfer/Condition Change", "Admission", "Discharge", "All of the above"], correct: 3 },
+            { q: "Discharge Order placed by:", a: ["Attending Physician", "Referring Physician", "Co-manage Physician", "All MDs"], correct: 0 },
+            { q: "Nurse entry to create Home Instructions:", a: ["Patient Instructions", "Referral Instructions", "Discharge Instructions, Inpatient", "MADPA"], correct: 2 },
+            { q: "NOT required prior to payment:", a: ["CF2/CF4", "For Billing Discharge", "Ready for Billing", "Gate Pass", "OR Tech/PARES"], correct: 3 },
+            { q: "iPro unavailable BCP for anesthesiologist:", a: ["PARES", "PreOp Note", "PAC", "I/O Sheet"], correct: 0 },
+            { q: "Downtime document to request item/med/procedure:", a: ["Credit Memo", "Fee Slip", "Turn-In Slip", "Patient Account Charge"], correct: 2 },
+            { q: "NOT retained as paper-based form:", a: ["Discharge Checklist", "CMRN", "Anesthesia Cart Checklist", "None of the above"], correct: 3 }
+        ]
+    };
 
     let currentQuestionSet = [];
 
-    function showScreen(screenId) {
-        ['screenStart', 'screenDetails', 'screenBriefing', 'screenQuiz'].forEach(s => document.getElementById(s).style.display = 'none');
-        document.getElementById(screenId).style.display = 'flex';
+    function showScreen(id) {
+        ['screenStart', 'screenDetails', 'screenBriefing', 'screenQuiz', 'screenResult'].forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
     }
 
     function validateDetails() {
         const val = document.getElementById('playerNum').value;
-        const module = document.getElementById('trainingModule').value;
-        if (!val) { alert("Please enter your employee number."); return; }
-        
+        const modKey = document.getElementById('trainingModule').value;
+        if (!val) { alert("Enter employee number"); return; }
+        playerIDValue = val;
         hudPlayerID.innerText = "ID: " + val;
-        hudModuleTitle.innerText = module.toUpperCase();
-        
-        if (module === "Acute Care") {
-            currentQuestionSet = acuteCareQuestions;
-        } else if (module === "Surgical Care") {
-            currentQuestionSet = surgicalCareQuestions;
-        } else {
-            currentQuestionSet = emergencyQuestions;
-        }
-        
-        storyPart = 0;
-        showStoryPart();
-        showScreen('screenBriefing');
+        hudModuleTitle.innerText = document.getElementById('trainingModule').options[document.getElementById('trainingModule').selectedIndex].text.toUpperCase();
+        currentQuestionSet = allQuestions[modKey];
+        storyPart = 0; showStoryPart(); showScreen('screenBriefing');
     }
 
-    // --- REWRITTEN BRIEFING LOGIC WITH FADE ---
+    let storyPart = 0;
     function showStoryPart() {
-        const storyBox = document.getElementById('storyContent');
-        storyBox.style.opacity = 0;
-        
-        setTimeout(() => {
-            storyBox.innerHTML = amboStory[storyPart];
-            storyBox.style.opacity = 1;
-        }, 100);
-
-        document.getElementById('storyBtn').innerText = storyPart === amboStory.length - 1 ? "🚀 DEPLOY NOW" : "CONTINUE";
+        const texts = getBriefingText();
+        document.getElementById('storyContent').innerHTML = texts[storyPart];
+        document.getElementById('storyBtn').innerText = storyPart === texts.length - 1 ? "🚀 DEPLOY AMBO" : "NEXT";
     }
 
     function nextStory() {
-        if (storyPart < amboStory.length - 1) { 
-            storyPart++; 
-            showStoryPart(); 
-        } else { 
-            startMission(); 
-        }
-    }
-
-    function startMission() {
-        mainOverlay.style.display = 'none';
-        isPaused = false; gameStarted = true;
+        const texts = getBriefingText();
+        if (storyPart < texts.length - 1) { storyPart++; showStoryPart(); } 
+        else { mainOverlay.style.display = 'none'; isPaused = false; gameStarted = true; }
     }
 
     function triggerCheckpoint() {
-        inQuiz = true; isPaused = true;
-        mainOverlay.style.display = 'flex';
-        showScreen('screenQuiz');
-        feedbackMsg.style.display = 'none';
-        showQuestion();
+        inQuiz = true; isPaused = true; batchCount = 0;
+        mainOverlay.style.display = 'flex'; showScreen('screenQuiz'); showQuestion();
     }
 
     function showQuestion() {
-        if (currentQuestionIndex >= currentQuestionSet.length) { resumeGame(); return; }
+        if (currentQuestionIndex >= currentQuestionSet.length) { arriving = true; resumeGame(); return; }
+        firstAttemptAtThisQuestion = true;
         const q = currentQuestionSet[currentQuestionIndex];
-        document.getElementById('qText').innerText = q.q;
-        const container = document.getElementById('optionsContainer');
-        container.innerHTML = '';
+        document.getElementById('qText').innerHTML = `<span style="color:var(--primary-blue)">SYSTEM SYNC...</span><br>Q${currentQuestionIndex + 1}: ${q.q}`;
+        const container = document.getElementById('optionsContainer'); container.innerHTML = '';
         q.a.forEach((opt, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.innerText = opt;
-            btn.onclick = () => handleAnswer(i);
-            container.appendChild(btn);
+            const btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = opt;
+            btn.onclick = () => handleAnswer(i); container.appendChild(btn);
         });
     }
 
     function handleAnswer(idx) {
-        if (idx === currentQuestionSet[currentQuestionIndex].correct) {
-            feedbackMsg.innerText = "✓ SYSTEM UPDATED";
-            feedbackMsg.className = "correct";
+        const correct = currentQuestionSet[currentQuestionIndex].correct;
+        if (idx === correct) {
+            if (firstAttemptAtThisQuestion) syncScore++;
+            feedbackMsg.innerText = "✓ DATA VALIDATED"; feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
-            currentQuestionIndex++;
+            currentQuestionIndex++; batchCount++;
             setTimeout(() => {
                 feedbackMsg.style.display = "none";
-                if (currentQuestionIndex % 5 !== 0 && currentQuestionIndex < currentQuestionSet.length) { showQuestion(); } 
-                else { resumeGame(); }
-            }, 1000);
+                if (batchCount < 5 && currentQuestionIndex < currentQuestionSet.length) showQuestion();
+                else resumeGame();
+            }, 800);
         } else {
-            wrongAnswers++;
-            qErrorText.innerText = wrongAnswers;
-            feedbackMsg.innerText = "✗ DATA ERROR";
-            feedbackMsg.className = "wrong";
+            if (firstAttemptAtThisQuestion) {
+                stability = Math.max(0, stability - 2); 
+                stabText.innerText = stability;
+                firstAttemptAtThisQuestion = false;
+            }
+            feedbackMsg.innerText = "✗ SYSTEM LOCK: -2% STABILITY"; feedbackMsg.className = "wrong";
             feedbackMsg.style.display = "block";
-            distance = Math.max(0, distance - 150);
         }
     }
 
     function resumeGame() {
-        inQuiz = false; isPaused = false;
-        mainOverlay.style.display = 'none';
+        inQuiz = false; isPaused = false; mainOverlay.style.display = 'none';
+        nextMilestone += 1000;
         if (currentQuestionIndex >= currentQuestionSet.length) arriving = true;
-        distance += 50; 
+    }
+
+    function generateFinalCode() {
+        const modCode = document.getElementById('trainingModule').value.substring(0,3).toUpperCase();
+        const code = `${modCode}-${stability}-${syncScore}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+        document.getElementById('generatedCodeDisplay').innerText = code;
+        document.getElementById('generatedCodeDisplay').style.display = 'block';
+        document.getElementById('genBtn').innerText = "COPY CODE FOR GFORM";
     }
 
     function drawAmbulance() {
-        if (invincibilityFrames % 10 < 5) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(ambulance.x, ambulance.y, ambulance.w, ambulance.h);
-            ctx.fillStyle = '#ff3e3e';
-            ctx.fillRect(ambulance.x, ambulance.y + 30, ambulance.w, 12);
-            ctx.fillStyle = '#333';
-            ctx.fillRect(ambulance.x + 4, ambulance.y + 6, ambulance.w - 8, 15);
-            let lightColor = (Math.floor(Date.now()/150)%2) ? '#ff3e3e' : '#00d4ff';
-            ctx.fillStyle = lightColor;
-            ctx.fillRect(ambulance.x + 6, ambulance.y - 4, 10, 5);
-            ctx.fillRect(ambulance.x + 20, ambulance.y - 4, 10, 5);
-        }
+        let light = (Math.floor(Date.now()/200)%2) ? '#ff3e3e' : '#00d4ff';
+        ctx.fillStyle = light; ctx.fillRect(ambulance.x+6, ambulance.y-6, 24, 6);
+        ctx.fillStyle = '#fff'; ctx.fillRect(ambulance.x, ambulance.y, ambulance.w, ambulance.h);
+        ctx.fillStyle = '#ff3e3e'; ctx.fillRect(ambulance.x, ambulance.y+35, ambulance.w, 12);
+        ctx.fillStyle = '#333'; ctx.fillRect(ambulance.x+4, ambulance.y+8, ambulance.w-8, 20);
     }
 
     function drawCar(car) {
-        ctx.fillStyle = car.color;
-        ctx.fillRect(car.x, car.y, car.w, car.h);
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(car.x + 4, car.y + 8, car.w - 8, 12);
+        ctx.fillStyle = car.color; ctx.fillRect(car.x, car.y, car.w, car.h);
+        ctx.fillStyle = '#add8e6'; ctx.fillRect(car.x+4, car.y+8, car.w-8, 12);
+        ctx.fillStyle = '#fff'; ctx.fillRect(car.x+4, car.y+car.h-6, 4, 3); ctx.fillRect(car.x+car.w-8, car.y+car.h-6, 4, 3);
     }
 
     function drawHospital() {
-        ctx.fillStyle = '#e0e0e0';
-        ctx.fillRect(20, hospitalY, 320, 350);
-        ctx.fillStyle = '#ff3e3e';
-        ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText("ST. LUKE'S MEDICAL CENTER", 180, hospitalY + 40);
+        ctx.fillStyle = '#f0f0f0'; ctx.fillRect(10, hospitalY, 340, 500);
+        ctx.fillStyle = '#333'; ctx.fillRect(10, hospitalY, 340, 15);
+        ctx.fillStyle = '#004a99'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText("ST. LUKE'S MEDICAL CENTER", 180, hospitalY + 45);
+        ctx.fillStyle = 'white'; ctx.fillRect(160, hospitalY + 65, 40, 40);
+        ctx.fillStyle = 'red'; ctx.fillRect(175, hospitalY + 70, 10, 30); ctx.fillRect(165, hospitalY + 80, 30, 10);
         ctx.fillStyle = '#add8e6';
-        for(let i=0; i<3; i++) {
-            for(let j=0; j<4; j++) ctx.fillRect(50 + (i*90), hospitalY + 80 + (j*60), 60, 40);
-        }
+        for(let r=0; r<5; r++) for(let c=0; c<4; c++) ctx.fillRect(40 + (c*80), hospitalY + 130 + (r*75), 40, 35);
     }
 
     function update() {
         if (isPaused || !gameStarted || inQuiz) return;
-        
         if (arriving) {
             traffic = [];
-            hospitalY += 3;
-            roadOffset += 4;
-            if (hospitalY >= 100) {
-                ambulance.y -= 2;
-                if (ambulance.y <= 300) { isPaused = true; missionComplete = true; }
+            if (hospitalY < 20) {
+                hospitalY += 3; roadOffset += 4;
+            } else {
+                if (ambulance.y > 450) { ambulance.y -= 1.5; } 
+                else {
+                    isPaused = true;
+                    document.getElementById('finalStability').innerText = stability + "%";
+                    document.getElementById('finalSync').innerText = `SYSTEM SYNC: ${syncScore}/${currentQuestionSet.length}`;
+                    document.getElementById('finalPlayerDisplay').innerText = "PLAYER ID: " + playerIDValue;
+                    showScreen('screenResult');
+                }
             }
         } else {
             if (keys['ArrowLeft'] && ambulance.x > 15) ambulance.x -= ambulance.speed;
             if (keys['ArrowRight'] && ambulance.x < canvas.width - ambulance.w - 15) ambulance.x += ambulance.speed;
-
-            distance += 3;
-            roadOffset += 12;
-            if (invincibilityFrames > 0) invincibilityFrames--;
-            
-            const nextCheckpoint = (Math.floor(currentQuestionIndex / 5) + 1) * 1000;
-            if (distance >= nextCheckpoint && currentQuestionIndex < currentQuestionSet.length) triggerCheckpoint();
-
+            distance += 4; roadOffset += 12;
+            if (distance >= nextMilestone && currentQuestionIndex < currentQuestionSet.length) triggerCheckpoint();
             spawnTimer++;
             if (spawnTimer > 40) {
-                const colors = ['#f39c12', '#8e44ad', '#27ae60', '#2980b9'];
-                traffic.push({ 
-                    x: Math.random()*(canvas.width-50) + 10, y: -100, w: 34, h: 65, 
-                    speed: 4 + Math.random()*4, color: colors[Math.floor(Math.random()*colors.length)] 
-                });
+                const colors = ['#f39c12', '#8e44ad', '#27ae60', '#d35400'];
+                traffic.push({ x: Math.random()*(canvas.width-50) + 10, y: -100, w: 34, h: 65, speed: 5 + Math.random()*2, color: colors[Math.floor(Math.random()*4)] });
                 spawnTimer = 0;
             }
-
             for (let i = traffic.length-1; i >= 0; i--) {
                 traffic[i].y += traffic[i].speed;
-                if (invincibilityFrames === 0 && 
-                    ambulance.x < traffic[i].x + traffic[i].w && 
-                    ambulance.x + ambulance.w > traffic[i].x && 
-                    ambulance.y < traffic[i].y + traffic[i].h && 
-                    ambulance.y + ambulance.h > traffic[i].y) {
-                    crashes++; crashText.innerText = crashes;
-                    invincibilityFrames = 70; distance = Math.max(0, distance - 200);
-                }
-                if (traffic[i].y > canvas.height) traffic.splice(i, 1);
+                if (ambulance.x < traffic[i].x + traffic[i].w && ambulance.x + ambulance.w > traffic[i].x && ambulance.y < traffic[i].y + traffic[i].h && ambulance.y + ambulance.h > traffic[i].y) {
+                    distance = Math.max(0, distance - 100); traffic.splice(i, 1);
+                } else if (traffic[i].y > canvas.height) traffic.splice(i, 1);
             }
         }
         distText.innerText = Math.floor(distance);
@@ -513,26 +506,14 @@
     }
 
     function draw() {
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = '#222'; ctx.fillRect(0,0, canvas.width, canvas.height);
+        ctx.clearRect(0,0, canvas.width, canvas.height); ctx.fillStyle = '#222'; ctx.fillRect(0,0, canvas.width, canvas.height);
         ctx.strokeStyle = '#f1c40f'; ctx.setLineDash([40, 40]); ctx.lineDashOffset = -roadOffset; ctx.lineWidth = 4;
         ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
         if (arriving) drawHospital();
-        traffic.forEach(drawCar);
-        drawAmbulance();
-        if (missionComplete) {
-            let safety = Math.max(0, 100 - (wrongAnswers * 2) - (crashes * 5));
-            ctx.fillStyle = 'rgba(0,0,0,0.9)'; ctx.fillRect(20, 180, canvas.width-40, 220);
-            ctx.fillStyle = '#00ff88'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText("MISSION COMPLETE", 180, 240);
-            ctx.fillStyle = '#fff'; ctx.font = '40px sans-serif'; ctx.fillText(safety + "%", 180, 300);
-            ctx.font = '14px sans-serif'; ctx.fillText("PATIENT STABILITY SCORE", 180, 330);
-            ctx.fillStyle = '#aaa'; ctx.fillText(hudPlayerID.innerText, 180, 370);
-        }
+        traffic.forEach(drawCar); drawAmbulance();
         requestAnimationFrame(draw);
     }
-    setInterval(update, 1000/60);
-    draw();
+    setInterval(update, 1000/60); draw();
 </script>
 </body>
 </html>

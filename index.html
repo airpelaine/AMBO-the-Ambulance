@@ -96,6 +96,11 @@
         .game-btn { padding: 16px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; letter-spacing: 1px; }
         .btn-green { background: var(--success-green); width: 100%; margin-top: 10px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
         .reset-btn { background: none; border: none; color: #666; margin-top: 10px; font-size: 11px; cursor: pointer; text-decoration: underline; font-weight: bold; }
+        
+        .result-data-box {
+            background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 12px;
+            padding: 15px; margin: 15px 0; width: 85%;
+        }
     </style>
 </head>
 <body>
@@ -161,12 +166,26 @@
 
         <div id="screenResult" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
             <div class="story-header" style="color: var(--success-green); font-size: 22px;">MISSION ACCOMPLISHED!</div>
-            <div id="finalStability" style="font-size: 55px; font-weight: bold; margin: 10px 0; color: #fff;">100%</div>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 2px;">PATIENT STABILITY SCORE</p>
-            <div id="finalSync" style="color: var(--warning-gold); font-weight: bold; margin-bottom: 15px; font-size: 14px;">SYSTEM SYNC: 0/30</div>
-            <div id="finalPlayerDisplay" style="color: var(--primary-blue); font-size: 16px; font-weight: bold; margin-bottom: 20px;"></div>
-            <div id="generatedCodeDisplay" style="background: #222; padding: 15px; border-radius: 8px; font-family: monospace; color: var(--primary-blue); font-size: 15px; margin-bottom: 15px; display: none; width: 85%; border: 1px solid #444;"></div>
-            <button id="genBtn" class="game-btn btn-green" onclick="generateFinalCode()">GENERATE COMPLETION CODE</button>
+            
+            <div class="result-data-box">
+                <div id="finalPlayerDisplay" style="color: var(--primary-blue); font-size: 16px; font-weight: bold; margin-bottom: 10px;">ID: ---</div>
+                <div style="display: flex; justify-content: space-around;">
+                    <div>
+                        <div id="finalStability" style="font-size: 32px; font-weight: bold; color: #fff;">100%</div>
+                        <p style="font-size: 9px; color: #aaa; margin:0;">STABILITY</p>
+                    </div>
+                    <div>
+                        <div id="finalSync" style="font-size: 32px; font-weight: bold; color: var(--warning-gold);">0/0</div>
+                        <p style="font-size: 9px; color: #aaa; margin:0;">SYSTEM SYNC</p>
+                    </div>
+                </div>
+            </div>
+
+            <p style="font-size: 11px; color: #888; margin-bottom: 15px; width: 80%;">Click below to validate your credentials and generate your sync token.</p>
+            
+            <div id="generatedCodeDisplay" style="background: #222; padding: 12px; border-radius: 8px; font-family: monospace; color: var(--primary-blue); font-size: 13px; margin-bottom: 15px; display: none; width: 85%; border: 1px solid #444; word-break: break-all;"></div>
+            
+            <button id="genBtn" class="game-btn btn-green" onclick="processValidation()">VALIDATE & SYNC</button>
         </div>
     </div>
 
@@ -190,6 +209,7 @@
     let roadOffset = 0, spawnTimer = 0, batchCount = 0, hospitalY = -600;
     let nextMilestone = 1000, firstAttemptAtThisQuestion = true;
     let playerIDValue = "";
+    let currentQuestionSet = [];
 
     const ambulance = { x: 162, y: 480, w: 36, h: 70, speed: 7 };
     let traffic = [];
@@ -200,14 +220,10 @@
 
     function getBriefingText() {
         return [
-            `"System online. Connection established. <b>Hello, Pilot ${playerIDValue}!</b> I am AMBO, your Automated Module-Based Outcome unit. I’ve been waiting for a partner with your clinical expertise."`,
-            `"We have a high-priority situation. The <b>Online Clinical Information System (O-CIS)</b> is under heavy load, and we need to deliver patient data to St. Luke’s Medical Center."`,
-            `"<b>Take the Wheel:</b> You're in control. <b>Drag me</b> or use <b>Arrow Keys</b> to navigate. Don't let the traffic slow us down!"`,
-            `"<b>The Stability Standard:</b> We’re starting at <b>100%</b>. This score stays on your HUD the entire mission—even during charting—so keep it high!"`,
-            `"<b>Collision Protocol:</b> Eyes on the road! Every collision hits us hard. A crash costs us <b>-100m of progress</b>, pushing our arrival time back."`,
-            `"<b>System Sync:</b> Every 1,000 meters, we must perform <b>EMR Charting</b>. I'll pause the drive, and you’ll face clinical questions to validate our data."`,
-            `"<b>Choose Wisely:</b> Your initial choice is recorded! If you make a mistake, my systems will lock. You cannot proceed until you find the correct answer."`,
-            `"Every clinical error permanently deducts <b>-2% from Patient Stability</b>. Ready to deploy?"`
+            `"System online. Connection established. <b>Hello, Pilot ${playerIDValue}!</b> I am AMBO, your Automated Module-Based Outcome unit."`,
+            `"The <b>Online Clinical Information System (O-CIS)</b> is under heavy load. We must deliver patient data safely."`,
+            `"<b>The Sync Standard:</b> Only the <b>first answer</b> you choose counts toward your System Sync score. Mistakes deduct stability."`,
+            `"Your final <b>Stability</b> is calculated as your accuracy rate. Ready to deploy?"`
         ];
     }
 
@@ -245,119 +261,117 @@
             { q: "Manual form used to procure items from Pharmacy or CSS during downtime:", a: ["Doctor’s Order Sheet", "Patient Account Charge (PAC)", "Medical Certificate", "Triage Form"], correct: 1 }
         ],
         ambulatory: [
-            { q: "Software required to launch O-CIS environment:", a: ["Adobe Reader", "Google Chrome", "Citrix Workspace/Receiver", "Edge"], correct: 2 },
-            { q: "Portal address used to access O-CIS system:", a: ["ocis.stlukes.com.ph", "portal.stlukes.com.ph", "stlukes.citrix.com", "emr.stlukes.ph"], correct: 1 },
-            { q: "Gateway icon used to 'Suspend' or lock app:", a: ["Red power", "Green question", "Purple crescent moon", "Blue eyeglasses"], correct: 2 },
-            { q: "Toolbar icon to Shutdown (exit/close) Sunrise:", a: ["Suspend", "Red power button", "User Preferences", "Recently Viewed"], correct: 1 },
-            { q: "Where to set default Sunrise app for startup:", a: ["Main Toolbar", "Chart Level", "User Preferences (General Tab)", "Citrix Storefront"], correct: 2 },
-            { q: "Information used to search patient in 'Find Visit':", a: ["Last Name", "MRN", "Visit Number", "All of the above"], correct: 3 },
+            { q: "Software required to launch O-CIS environment?", a: ["Adobe Reader", "Google Chrome", "Citrix Workspace/Receiver", "Edge"], correct: 2 },
+            { q: "Portal address used to access O-CIS system?", a: ["ocis.stlukes.com.ph", "portal.stlukes.com.ph", "stlukes.citrix.com", "emr.stlukes.ph"], correct: 1 },
+            { q: "Gateway icon used to 'Suspend' or lock app?", a: ["Red power", "Green question", "Purple crescent moon", "Blue eyeglasses"], correct: 2 },
+            { q: "Toolbar icon to Shutdown (exit/close) Sunrise?", a: ["Suspend", "Red power button", "User Preferences", "Recently Viewed"], correct: 1 },
+            { q: "Where to set default Sunrise app for startup?", a: ["Main Toolbar", "Chart Level", "User Preferences (General Tab)", "Citrix Storefront"], correct: 2 },
+            { q: "Information used to search patient in 'Find Visit'?", a: ["Last Name", "MRN", "Visit Number", "All of the above"], correct: 3 },
             { q: "Why ask if patient has existing PIN during registration?", a: ["Check billing", "To avoid double MRN", "Verify insurance", "Check allergies"], correct: 1 },
-            { q: "Standard text format for patient names in registration:", a: ["Sentence case", "ALL CAPS (CAPS LOCK)", "lowercase", "Title Case"], correct: 1 },
-            { q: "Missing middle name in registration protocol:", a: ["Leave blank", "Put N/A", "Put a DASH (-)", "Type NONE"], correct: 2 },
-            { q: "Function to document physical arrival of patient to ANS unit:", a: ["Register Now", "Pre-Reg", "Arrive/Cancel Arrival", "Change Location"], correct: 2 },
-            { q: "Trigger order to initiate payment processing in SLB:", a: ["Discharge Order", "Pharmacy Order", "Ready for Billing", "Lab Order"], correct: 2 },
-            { q: "Current Providers radio button represents:", a: ["Nurse entering", "Attending and Referral MDs", "Fellows/Residents", "Billing Dept"], correct: 1 },
-            { q: "Field used to manually modify the title of a document:", a: ["Document Name", "Document Topic", "Sections", "Source"], correct: 1 },
-            { q: "Left 'Significant' field blank means:", a: ["Cannot save", "Document can only be saved as 'Incomplete'", "Fills N/A", "Prevents logoff"], correct: 1 },
-            { q: "Function to copy details from previous notes:", a: ["Refer to Note", "Modify Template", "Copy Forward", "Expansion"], correct: 2 },
-            { q: "Knowledge Based Medication Administration (KBMA) purpose:", a: ["Drug cost", "Use patient/med barcodes to validate", "Print labels", "Order meds"], correct: 1 },
-            { q: "First two steps in KBMA workflow:", a: ["Scan drug then patient", "Scan patient barcode then medication barcode", "Check ID then ask name", "Open MAR then scan drug"], correct: 1 },
-            { q: "Worklist Manager: color RED indicates task is:", a: ["Continuous", "Scheduled", "Overdue (60 mins past due)", "PRN"], correct: 2 },
-            { q: "Validation requirement for High Alert Medications (HAM):", a: ["MD signature", "A Witness or Co-Signature", "Verbal consent", "Pharmacy approval"], correct: 1 },
-            { q: "Action for 'No Match on Scan' error:", a: ["Administer anyway", "Discard initial scan and re-verify", "Override", "Type name"], correct: 1 },
-            { q: "Add flowsheet not visible in selection:", a: ["Add Parameter", "Click the '+' (Plus) icon", "Main Toolbar", "Right-click"], correct: 1 },
-            { q: "Assessment tool for patient risk for falling:", a: ["NIHSS", "Morse Fall Scale", "GCS", "Braden"], correct: 1 },
-            { q: "MD Allergy Review window (Inpatients):", a: ["2 hours", "4 hours", "8 hours", "24 hours"], correct: 2 },
-            { q: "Result if allergies NOT reviewed by MD within 8h:", a: ["Auto-discharge", "Entering of orders will not be allowed", "Billing notified", "Nurse re-enters"], correct: 1 },
-            { q: "Icon in EMR signifying abnormal laboratory result:", a: ["Red exclamation", "Red Flag", "Green Flag", "Yellow Flag"], correct: 3 },
-            { q: "Environment providing 'Read-Only' access during downtime:", a: ["PROD", "ROE", "TRAIN", "TEST"], correct: 1 },
-            { q: "Tab to view scanned loose documents/prescriptions:", a: ["Results", "Flowsheets", "Document Management", "Timeline"], correct: 2 },
-            { q: "Policy placement for 'SCANNED' stamp on physical documents:", a: ["Top right", "Center", "Left lower portion", "Back"], correct: 2 },
-            { q: "Paper form for multidisciplinary assessment during downtime:", a: ["Admission Note", "MIAD", "Order Entry", "Case Usage"], correct: 1 },
-            { q: "Accessing St. Luke's Billing (SLB) system:", a: ["OCIS Toolbar", "Gateway", "SLMC Enterprise Portal login", "Signature pad"], correct: 2 }
+            { q: "Standard text format for patient names in registration?", a: ["Sentence case", "ALL CAPS (CAPS LOCK)", "lowercase", "Title Case"], correct: 1 },
+            { q: "Missing middle name in registration protocol?", a: ["Leave blank", "Put N/A", "Put a DASH (-)", "Type NONE"], correct: 2 },
+            { q: "Function to document physical arrival of patient to ANS unit?", a: ["Register Now", "Pre-Reg", "Arrive/Cancel Arrival", "Change Location"], correct: 2 },
+            { q: "Trigger order to initiate payment processing in SLB?", a: ["Discharge Order", "Pharmacy Order", "Ready for Billing", "Lab Order"], correct: 2 },
+            { q: "Current Providers radio button represents?", a: ["Nurse entering", "Attending and Referral MDs", "Fellows/Residents", "Billing Dept"], correct: 1 },
+            { q: "Field used to manually modify the title of a document?", a: ["Document Name", "Document Topic", "Sections", "Source"], correct: 1 },
+            { q: "Left 'Significant' field blank means?", a: ["Cannot save", "Document can only be saved as 'Incomplete'", "Fills N/A", "Prevents logoff"], correct: 1 },
+            { q: "Function to copy details from previous notes?", a: ["Refer to Note", "Modify Template", "Copy Forward", "Expansion"], correct: 2 },
+            { q: "Knowledge Based Medication Administration (KBMA) purpose?", a: ["Drug cost", "Use patient/med barcodes to validate", "Print labels", "Order meds"], correct: 1 },
+            { q: "First two steps in KBMA workflow?", a: ["Scan drug then patient", "Scan patient barcode then medication barcode", "Check ID then ask name", "Open MAR then scan drug"], correct: 1 },
+            { q: "Worklist Manager: color RED indicates task is?", a: ["Continuous", "Scheduled", "Overdue (60 mins past due)", "PRN"], correct: 2 },
+            { q: "Validation requirement for High Alert Medications (HAM)?", a: ["MD signature", "A Witness or Co-Signature", "Verbal consent", "Pharmacy approval"], correct: 1 },
+            { q: "Action for 'No Match on Scan' error?", a: ["Administer anyway", "Discard initial scan and re-verify", "Override", "Type name"], correct: 1 },
+            { q: "Add flowsheet not visible in selection?", a: ["Add Parameter", "Click the '+' (Plus) icon", "Main Toolbar", "Right-click"], correct: 1 },
+            { q: "Assessment tool for patient risk for falling?", a: ["NIHSS", "Morse Fall Scale", "GCS", "Braden"], correct: 1 },
+            { q: "MD Allergy Review window (Inpatients)?", a: ["2 hours", "4 hours", "8 hours", "24 hours"], correct: 2 },
+            { q: "Result if allergies NOT reviewed by MD within 8h?", a: ["Auto-discharge", "Entering of orders will not be allowed", "Billing notified", "Nurse re-enters"], correct: 1 },
+            { q: "Icon in EMR signifying abnormal laboratory result?", a: ["Red exclamation", "Red Flag", "Green Flag", "Yellow Flag"], correct: 3 },
+            { q: "Environment providing 'Read-Only' access during downtime?", a: ["PROD", "ROE", "TRAIN", "TEST"], correct: 1 },
+            { q: "Tab to view scanned loose documents/prescriptions?", a: ["Results", "Flowsheets", "Document Management", "Timeline"], correct: 2 },
+            { q: "Policy placement for 'SCANNED' stamp on physical documents?", a: ["Top right", "Center", "Left lower portion", "Back"], correct: 2 },
+            { q: "Paper form for multidisciplinary assessment during downtime?", a: ["Admission Note", "MIAD", "Order Entry", "Case Usage"], correct: 1 },
+            { q: "Accessing St. Luke's Billing (SLB) system?", a: ["OCIS Toolbar", "Gateway", "SLMC Enterprise Portal login", "Signature pad"], correct: 2 }
         ],
         basic: [
-            { q: "O-CIS system portal address:", a: ["ocis.stlukes.com.ph", "portal.stlukes.com.ph", "stlukes.citrix.com", "emr.stlukes.ph"], correct: 1 },
-            { q: "App to launch O-CIS environment:", a: ["Adobe", "Chrome", "Citrix Workspace/Receiver", "Edge"], correct: 2 },
-            { q: "Contact for missing Chrome/Citrix on device:", a: ["Unit Manager", "HR", "IT (local 4206/5520)", "HCA"], correct: 2 },
-            { q: "Credentials for St. Luke's Enterprise Portal:", a: ["Employee ID", "Personal email", "Domain account", "Citrix key"], correct: 2 },
-            { q: "Add app to 'Favorites' in Citrix by:", a: ["Right-click", "Highlight the star", "Drag icon", "Contact IT"], correct: 1 },
-            { q: "NOT a core value of SLMC:", a: ["Integrity", "Profitability", "Accountability", "Teamwork"], correct: 1 },
-            { q: "Gateway Toolbar icon for 'Suspend' (short lock):", a: ["Red power", "Green question", "Purple crescent moon", "Blue eyeglasses"], correct: 2 },
-            { q: "Gateway icon for 'Shutdown':", a: ["Suspend", "Red power button", "Preferences", "eyeglasses"], correct: 1 },
-            { q: "Set default startup application in:", a: ["Main Toolbar", "Chart Level", "User Preferences Settings (General Tab)", "Citrix Storefront"], correct: 2 },
-            { q: "Recently Viewed Patient (Eyeglasses) icon shows:", a: ["Insurance", "Recently viewed patient at 'By Patient' tab", "Lab results", "Shift summary"], correct: 1 },
-            { q: "First step to find specific patient visit:", a: ["Flowsheet", "Double-click 'Find Visit' icon", "Clinical Summary", "Reports"], correct: 1 },
-            { q: "Find Visit search criteria includes:", a: ["Last Name", "MRN", "Visit Number", "All of the above"], correct: 3 },
-            { q: "Goal of IPSG 1 is to:", a: ["Communication", "Identify Patients Correctly", "Reduce falls", "Prevent infection"], correct: 1 },
-            { q: "Patient header details include:", a: ["Age/Gender", "Status", "MRN", "All of the above"], correct: 3 },
-            { q: "Header display for patient at risk for fall:", a: ["Strict Bedrest", "Precautions: Fall", "High Alert", "NPO"], correct: 1 },
-            { q: "Tab serving as nurse hand-off tool during endorsement:", a: ["Orders", "Results", "Clinical Summary Tab", "Document Management"], correct: 2 },
-            { q: "Icon access to Modified Fall Risk Assessment:", a: ["Enter Document", "Enter Order", "Worklist", "Flowsheet"], correct: 0 },
-            { q: "Flowsheet Manager assessment tool for fall risk:", a: ["NIHSS", "Morse Fall Scale", "GCS", "Braden"], correct: 1 },
-            { q: "CLABSI stands for:", a: ["Laboratory Integration", "Central Line Associated Bloodstream Infection", "Basic System Info", "Life Intervention"], correct: 1 },
-            { q: "Flowsheet bundle for patient on artificial airway:", a: ["Fall Prevention", "Intake/Output", "Ventilator-Associated Pneumonia (VAP) Bundle", "Access Devices"], correct: 2 },
-            { q: "Location of 'Print Reports' icon:", a: ["Patient Info", "On the Main Toolbar", "Citrix Launcher", "Login screen"], correct: 1 },
-            { q: "Report Category to print clinical document:", a: ["Administrative", "Results", "Documents", "Patient Lists"], correct: 2 },
-            { q: "Purpose of 'Preview' button in report selection:", a: ["Finalize", "Check the document before printing", "Edit text", "Save PDF"], correct: 1 },
-            { q: "Report for PhilHealth claim form:", a: ["CF3 Report", "Transfer Note", "Discharge Summary", "Med Certificate"], correct: 0 },
-            { q: "Correct Report Category for laboratory results:", a: ["Documents", "Results", "Orders", "Administrative"], correct: 1 },
-            { q: "BCP stands for:", a: ["Basic Care Plan", "Billing Process", "Business Continuity Plan", "Backup Portal"], correct: 2 },
-            { q: "Environment for 'Read-Only' downtime access:", a: ["TEST", "ROE", "TRAIN", "SLB-DATA"], correct: 1 },
-            { q: "Downtime paper form for Admission Note Nursing:", a: ["Administration", "Multi-Disciplinary Initial Assessment Database", "Monthly Audit", "Inventory"], correct: 1 },
-            { q: "Age range for MIAD Pediatric form:", a: ["Birth-28d", "29 Days to 18 years and 364 days old", "19y+", "Over 65y"], correct: 1 },
-            { q: "Access St. Luke's Billing (SLB) through:", a: ["OCIS Toolbar", "Gateway", "SLMC Enterprise Portal login", "Google Chrome"], correct: 2 }
+            { q: "O-CIS system portal address?", a: ["ocis.stlukes.com.ph", "portal.stlukes.com.ph", "stlukes.citrix.com", "emr.stlukes.ph"], correct: 1 },
+            { q: "App to launch O-CIS environment?", a: ["Adobe", "Chrome", "Citrix Workspace/Receiver", "Edge"], correct: 2 },
+            { q: "Contact for missing Chrome/Citrix on device?", a: ["Unit Manager", "HR", "IT (local 4206/5520)", "HCA"], correct: 2 },
+            { q: "Credentials for St. Luke's Enterprise Portal?", a: ["Employee ID", "Personal email", "Domain account", "Citrix key"], correct: 2 },
+            { q: "Add app to 'Favorites' in Citrix by?", a: ["Right-click", "Highlight the star", "Drag icon", "Contact IT"], correct: 1 },
+            { q: "NOT a core value of SLMC?", a: ["Integrity", "Profitability", "Accountability", "Teamwork"], correct: 1 },
+            { q: "Gateway Toolbar icon for 'Suspend' (short lock)?", a: ["Red power", "Green question", "Purple crescent moon", "Blue eyeglasses"], correct: 2 },
+            { q: "Gateway icon for 'Shutdown'?", a: ["Suspend", "Red power button", "Preferences", "eyeglasses"], correct: 1 },
+            { q: "Set default startup application in?", a: ["Main Toolbar", "Chart Level", "User Preferences Settings (General Tab)", "Citrix Storefront"], correct: 2 },
+            { q: "Recently Viewed Patient (Eyeglasses) icon shows?", a: ["Insurance", "Recently viewed patient at 'By Patient' tab", "Lab results", "Shift summary"], correct: 1 },
+            { q: "First step to find specific patient visit?", a: ["Flowsheet", "Double-click 'Find Visit' icon", "Clinical Summary", "Reports"], correct: 1 },
+            { q: "Find Visit search criteria includes?", a: ["Last Name", "MRN", "Visit Number", "All of the above"], correct: 3 },
+            { q: "Goal of IPSG 1 is to?", a: ["Communication", "Identify Patients Correctly", "Reduce falls", "Prevent infection"], correct: 1 },
+            { q: "Patient header details include?", a: ["Age/Gender", "Status", "MRN", "All of the above"], correct: 3 },
+            { q: "Header display for patient at risk for fall?", a: ["Strict Bedrest", "Precautions: Fall", "High Alert", "NPO"], correct: 1 },
+            { q: "Tab serving as nurse hand-off tool during endorsement?", a: ["Orders", "Results", "Clinical Summary Tab", "Document Management"], correct: 2 },
+            { q: "Icon access to Modified Fall Risk Assessment?", a: ["Enter Document", "Enter Order", "Worklist", "Flowsheet"], correct: 0 },
+            { q: "Flowsheet Manager assessment tool for fall risk?", a: ["NIHSS", "Morse Fall Scale", "GCS", "Braden"], correct: 1 },
+            { q: "CLABSI stands for?", a: ["Laboratory Integration", "Central Line Associated Bloodstream Infection", "Basic System Info", "Life Intervention"], correct: 1 },
+            { q: "Flowsheet bundle for patient on artificial airway?", a: ["Fall Prevention", "Intake/Output", "Ventilator-Associated Pneumonia (VAP) Bundle", "Access Devices"], correct: 2 },
+            { q: "Location of 'Print Reports' icon?", a: ["Patient Info", "On the Main Toolbar", "Citrix Launcher", "Login screen"], correct: 1 },
+            { q: "Report Category to print clinical document?", a: ["Administrative", "Results", "Documents", "Patient Lists"], correct: 2 },
+            { q: "Purpose of 'Preview' button in report selection?", a: ["Finalize", "Check the document before printing", "Edit text", "Save PDF"], correct: 1 },
+            { q: "Report for PhilHealth claim form?", a: ["CF3 Report", "Transfer Note", "Discharge Summary", "Med Certificate"], correct: 0 },
+            { q: "Correct Report Category for laboratory results?", a: ["Documents", "Results", "Orders", "Administrative"], correct: 1 },
+            { q: "BCP stands for?", a: ["Basic Care Plan", "Billing Process", "Business Continuity Plan", "Backup Portal"], correct: 2 },
+            { q: "Environment for 'Read-Only' downtime access?", a: ["TEST", "ROE", "TRAIN", "SLB-DATA"], correct: 1 },
+            { q: "Downtime paper form for Admission Note Nursing?", a: ["Administration", "Multi-Disciplinary Initial Assessment Database", "Monthly Audit", "Inventory"], correct: 1 },
+            { q: "Age range for MIAD Pediatric form?", a: ["Birth-28d", "29 Days to 18 years and 364 days old", "19y+", "Over 65y"], correct: 1 },
+            { q: "Access St. Luke's Billing (SLB) through?", a: ["OCIS Toolbar", "Gateway", "SLMC Enterprise Portal login", "Google Chrome"], correct: 2 }
         ],
         acute: [
-            { q: "Bedside nurse EMR access protocol:", a: ["Pathology COW", "the COW/WOW of the Nursing Unit where I am on duty", "Any unit COW", "Any IT device"], correct: 1 },
-            { q: "Submit password SARF to:", a: ["IT USG", "Unit Manager", "HCA", "Data Analytics"], correct: 0 },
-            { q: "Color/Symbol for emergency value needing immediate action:", a: ["Green check", "Blue exclamation", "Red exclamation mark", "Green box"], correct: 2 },
-            { q: "Green checkmark next to vital sign indicates:", a: ["Danger high", "Normal and verified", "Broken sensor", "Not seen by MD"], correct: 1 },
-            { q: "Menu for printing prescriptions:", a: ["Print Reports", "Prescription Writer", "Enter Document", "Enter Order"], correct: 0 },
-            { q: "Icon for value out of range but not life-threatening:", a: ["Blue exclamation mark", "Red exclamation", "Green check", "Grey heart"], correct: 0 },
-            { q: "Lab status signified by icon with pencil in corner:", a: ["Received", "Critical", "Pending Collection", "Final Reviewed"], correct: 2 },
-            { q: "Green refresh/cycle arrow on lab icon signifies:", a: ["The specimen has been collected.", "Results critical", "Pending collection", "Lab received"], correct: 0 },
-            { q: "Red refresh arrow on lab icon indicates:", a: ["Results corrected", "Lab received", "Specimen not collected for >29 mins", "Collection complete"], correct: 2 },
-            { q: "Blue refresh arrow on lab icon indicates:", a: ["Collected", "Pending", "Critical", "Received by Performing Unit"], correct: 3 },
-            { q: "Blue checkmark on lab icon indicates:", a: ["Pending collection", "Final results reviewed or corrected", "Received", "Results critical"], correct: 1 },
-            { q: "Red exclamation on tracking board indicates:", a: ["Not collected >24h", "Critical Value", "Received", "Final reviewed"], correct: 1 },
-            { q: "Demographic data text format policy:", a: ["ALL CAPS", "Does not matter", "Title Caps", "lowercase"], correct: 0 },
-            { q: "No middle name protocol:", a: ["N/A", "-", "NA", "/"], correct: 1 },
-            { q: "Inpatient procedure scheduling visit protocol:", a: ["Use 'Admitted/Arrived' visit number", "New visit", "None of above", "PreReg visit number"], correct: 0 },
-            { q: "Surgical Case confirmation timeframe:", a: ["Day of", "4h prior", "Week before", "The night prior the procedure"], correct: 3 },
-            { q: "Tagging of Surgical Time Markers protocol:", a: ["OR Tech needed", "In real-time", "In PACU", "After procedure"], correct: 1 },
-            { q: "Clinical Document NOT entered by nurse:", a: ["PreOp Note", "Admission Note Nursing", "PreOp Nursing Note", "Transfer Note"], correct: 0 },
-            { q: "First EMR step for ER Admission arrival:", a: ["Mark worklist done", "Change Temporary Location", "Change Assigned Location to designated room", "Add to visit list"], correct: 2 },
-            { q: "Unit view for incoming admissions:", a: ["Personal Visit List", "Pending Incoming Visit List", "Patients Logbook", "Patient Flow"], correct: 1 },
-            { q: "Form for admitting 19-year-old patient:", a: ["Pediatric Note", "Admission Note Nursing", "Newborn Note", "Obstetric Note"], correct: 1 },
-            { q: "Action to add Home Medications during history interview:", a: ["Prescription Writer", "Order Reconciliation", "Allergies Summary", "Add Item"], correct: 1 },
-            { q: "Action to add allergies during history interview:", a: ["Order Reconciliation", "Allergies Summary", "Add Item", "Prescription Writer"], correct: 1 },
-            { q: "Infusion Pump worklist tasks marked done:", a: ["Before EOS", "Before midnight", "Every hour", "Once performed"], correct: 1 },
-            { q: "Continuous oxygen therapy worklist tasks marked done:", a: ["Every end of shift", "Every midnight", "Every hour", "Start of shift"], correct: 0 },
-            { q: "POCT CBG in worklist manager marked done:", a: ["Every shift", "After 8 hours", "Every hour", "When performed"], correct: 3 },
-            { q: "Request additional doses for medication wastage via:", a: ["Outpatient Review", "Order Recon", "Prescription Writer", "Order Message Manager"], correct: 3 },
-            { q: "Charge Nurse protocol before First Dose check:", a: ["Add comment 'First Dose Checked'", "Mark as done", "Enter Username/PW for check", "Administer"], correct: 0 },
-            { q: "Medication rescheduling protocol:", a: ["Charge Nurse instructions", "No need (automated)", "After first dose/outside window", "After each dose"], correct: 2 },
-            { q: "Protocol for endorsing remaining multidose vials:", a: ["adding a comment on the medication inside worklist manager", "Comment on flowsheet", "Verbal only", "Clinical document"], correct: 0 },
-            { q: "Appendectomy med from general unit uses KBMA (T/F):", a: ["FALSE", "TRUE"], correct: 1 },
-            { q: "Activate Request for Blood Pickup via:", a: ["Worklist", "the Orders Tab", "Enter Order", "KBMA"], correct: 1 },
-            { q: "Document for Blood Transfusion reactions:", a: ["Flowsheet", "Assessment and Cares", "Blood Transfusion Reaction Note", "Summary"], correct: 2 },
-            { q: "Plan of Care accomplishment frequency:", a: ["Every hour", "Every shift", "every problem occurrence", "As necessary"], correct: 2 },
-            { q: "Peri-Op Nurse documentation includes:", a: ["PreOp Nursing Note", "Intra-Op Record", "Surgery Case Details", "All of the Above"], correct: 3 },
-            { q: "Listing used procedure equipment in Surgical Case List:", a: ["Post-Op", "Case Usage", "Case Header", "Intra-Op"], correct: 1 },
-            { q: "Add new flowsheet in criteria via:", a: ["Enter Document", "Create Referral", "Plus Sign", "Flowsheet Manager"], correct: 2 },
-            { q: "Clinical documentation for Critical Values:", a: ["Critical Results Notification", "Value Flowsheet", "Result Summary", "None"], correct: 0 },
-            { q: "Physician Order Reconciliation protocol:", a: ["Transfer/Condition Change", "Admission", "Discharge", "All of the above"], correct: 3 },
-            { q: "Discharge Order placed by:", a: ["Attending Physician", "Referring Physician", "Co-manage Physician", "All MDs"], correct: 0 },
-            { q: "Nurse entry to create Home Instructions:", a: ["Patient Instructions", "Referral Instructions", "Discharge Instructions, Inpatient", "MADPA"], correct: 2 },
-            { q: "NOT required prior to payment:", a: ["CF2/CF4", "For Billing Discharge", "Ready for Billing", "Gate Pass", "OR Tech/PARES"], correct: 3 },
-            { q: "iPro unavailable BCP for anesthesiologist:", a: ["PARES", "PreOp Note", "PAC", "I/O Sheet"], correct: 0 },
-            { q: "Downtime document to request item/med/procedure:", a: ["Credit Memo", "Fee Slip", "Turn-In Slip", "Patient Account Charge"], correct: 2 },
-            { q: "NOT retained as paper-based form:", a: ["Discharge Checklist", "CMRN", "Anesthesia Cart Checklist", "None of the above"], correct: 3 }
+            { q: "Bedside nurse EMR access protocol?", a: ["Pathology COW", "the COW/WOW of the Nursing Unit where I am on duty", "Any unit COW", "Any IT device"], correct: 1 },
+            { q: "Submit password SARF to?", a: ["IT USG", "Unit Manager", "HCA", "Data Analytics"], correct: 0 },
+            { q: "Color/Symbol for emergency value needing immediate action?", a: ["Green check", "Blue exclamation", "Red exclamation mark", "Green box"], correct: 2 },
+            { q: "Green checkmark next to vital sign indicates?", a: ["Danger high", "Normal and verified", "Broken sensor", "Not seen by MD"], correct: 1 },
+            { q: "Menu for printing prescriptions?", a: ["Print Reports", "Prescription Writer", "Enter Document", "Enter Order"], correct: 0 },
+            { q: "Icon for value out of range but not life-threatening?", a: ["Blue exclamation mark", "Red exclamation", "Green check", "Grey heart"], correct: 0 },
+            { q: "Lab status signified by icon with pencil in corner?", a: ["Received", "Critical", "Pending Collection", "Final Reviewed"], correct: 2 },
+            { q: "Green refresh/cycle arrow on lab icon signifies?", a: ["The specimen has been collected.", "Results critical", "Pending collection", "Lab received"], correct: 0 },
+            { q: "Red refresh arrow on lab icon indicates?", a: ["Results corrected", "Lab received", "Specimen not collected for >29 mins", "Collection complete"], correct: 2 },
+            { q: "Blue refresh arrow on lab icon indicates?", a: ["Collected", "Pending", "Critical", "Received by Performing Unit"], correct: 3 },
+            { q: "Blue checkmark on lab icon indicates?", a: ["Pending collection", "Final results reviewed or corrected", "Received", "Results critical"], correct: 1 },
+            { q: "Red exclamation on tracking board indicates?", a: ["Not collected >24h", "Critical Value", "Received", "Final reviewed"], correct: 1 },
+            { q: "Demographic data text format policy?", a: ["ALL CAPS", "Does not matter", "Title Caps", "lowercase"], correct: 0 },
+            { q: "No middle name protocol?", a: ["N/A", "-", "NA", "/"], correct: 1 },
+            { q: "Inpatient procedure scheduling visit protocol?", a: ["Use 'Admitted/Arrived' visit number", "New visit", "None of above", "PreReg visit number"], correct: 0 },
+            { q: "Surgical Case confirmation timeframe?", a: ["Day of", "4h prior", "Week before", "The night prior the procedure"], correct: 3 },
+            { q: "Tagging of Surgical Time Markers protocol?", a: ["OR Tech needed", "In real-time", "In PACU", "After procedure"], correct: 1 },
+            { q: "Clinical Document NOT entered by nurse?", a: ["PreOp Note", "Admission Note Nursing", "PreOp Nursing Note", "Transfer Note"], correct: 0 },
+            { q: "First EMR step for ER Admission arrival?", a: ["Mark worklist done", "Change Temporary Location", "Change Assigned Location to designated room", "Add to visit list"], correct: 2 },
+            { q: "Unit view for incoming admissions?", a: ["Personal Visit List", "Pending Incoming Visit List", "Patients Logbook", "Patient Flow"], correct: 1 },
+            { q: "Form for admitting 19-year-old patient?", a: ["Pediatric Note", "Admission Note Nursing", "Newborn Note", "Obstetric Note"], correct: 1 },
+            { q: "Action to add Home Medications during history interview?", a: ["Prescription Writer", "Order Reconciliation", "Allergies Summary", "Add Item"], correct: 1 },
+            { q: "Action to add allergies during history interview?", a: ["Order Reconciliation", "Allergies Summary", "Add Item", "Prescription Writer"], correct: 1 },
+            { q: "Infusion Pump worklist tasks marked done?", a: ["Before EOS", "Before midnight", "Every hour", "Once performed"], correct: 1 },
+            { q: "Continuous oxygen therapy worklist tasks marked done?", a: ["Every end of shift", "Every midnight", "Every hour", "Start of shift"], correct: 0 },
+            { q: "POCT CBG in worklist manager marked done?", a: ["Every shift", "After 8 hours", "Every hour", "When performed"], correct: 3 },
+            { q: "Request additional doses for medication wastage via?", a: ["Outpatient Review", "Order Recon", "Prescription Writer", "Order Message Manager"], correct: 3 },
+            { q: "Charge Nurse protocol before First Dose check?", a: ["Add comment 'First Dose Checked'", "Mark as done", "Enter Username/PW for check", "Administer"], correct: 0 },
+            { q: "Medication rescheduling protocol?", a: ["Charge Nurse instructions", "No need (automated)", "After first dose/outside window", "After each dose"], correct: 2 },
+            { q: "Protocol for endorsing remaining multidose vials?", a: ["adding a comment on the medication inside worklist manager", "Comment on flowsheet", "Verbal only", "Clinical document"], correct: 0 },
+            { q: "Appendectomy med from general unit uses KBMA (T/F)?", a: ["FALSE", "TRUE"], correct: 1 },
+            { q: "Activate Request for Blood Pickup via?", a: ["Worklist", "the Orders Tab", "Enter Order", "KBMA"], correct: 1 },
+            { q: "Document for Blood Transfusion reactions?", a: ["Flowsheet", "Assessment and Cares", "Blood Transfusion Reaction Note", "Summary"], correct: 2 },
+            { q: "Plan of Care accomplishment frequency?", a: ["Every hour", "Every shift", "every problem occurrence", "As necessary"], correct: 2 },
+            { q: "Peri-Op Nurse documentation includes?", a: ["PreOp Nursing Note", "Intra-Op Record", "Surgery Case Details", "All of the Above"], correct: 3 },
+            { q: "Listing used procedure equipment in Surgical Case List?", a: ["Post-Op", "Case Usage", "Case Header", "Intra-Op"], correct: 1 },
+            { q: "Add new flowsheet in criteria via?", a: ["Enter Document", "Create Referral", "Plus Sign", "Flowsheet Manager"], correct: 2 },
+            { q: "Clinical documentation for Critical Values?", a: ["Critical Results Notification", "Value Flowsheet", "Result Summary", "None"], correct: 0 },
+            { q: "Physician Order Reconciliation protocol?", a: ["Transfer/Condition Change", "Admission", "Discharge", "All of the above"], correct: 3 },
+            { q: "Discharge Order placed by?", a: ["Attending Physician", "Referring Physician", "Co-manage Physician", "All MDs"], correct: 0 },
+            { q: "Nurse entry to create Home Instructions?", a: ["Patient Instructions", "Referral Instructions", "Discharge Instructions, Inpatient", "MADPA"], correct: 2 },
+            { q: "NOT required prior to payment?", a: ["CF2/CF4", "For Billing Discharge", "Ready for Billing", "Gate Pass", "OR Tech/PARES"], correct: 3 },
+            { q: "iPro unavailable BCP for anesthesiologist?", a: ["PARES", "PreOp Note", "PAC", "I/O Sheet"], correct: 0 },
+            { q: "Downtime document to request item/med/procedure?", a: ["Credit Memo", "Fee Slip", "Turn-In Slip", "Patient Account Charge"], correct: 2 },
+            { q: "NOT retained as paper-based form?", a: ["Discharge Checklist", "CMRN", "Anesthesia Cart Checklist", "None of the above"], correct: 3 }
         ]
     };
-
-    let currentQuestionSet = [];
 
     function showScreen(id) {
         ['screenStart', 'screenDetails', 'screenBriefing', 'screenQuiz', 'screenResult'].forEach(s => document.getElementById(s).style.display = 'none');
@@ -405,12 +419,20 @@
         });
     }
 
+    // MODIFIED LOGIC: Patient Stability based on first correct answers over total questions
     function handleAnswer(idx) {
         const correct = currentQuestionSet[currentQuestionIndex].correct;
         if (idx === correct) {
-            if (firstAttemptAtThisQuestion) syncScore++;
+            if (firstAttemptAtThisQuestion) {
+                syncScore++;
+            }
             feedbackMsg.innerText = "✓ DATA VALIDATED"; feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
+            
+            // Re-calculate Stability based on correct-first-attempts vs total
+            stability = Math.round((syncScore / currentQuestionSet.length) * 100);
+            stabText.innerText = stability;
+
             currentQuestionIndex++; batchCount++;
             setTimeout(() => {
                 feedbackMsg.style.display = "none";
@@ -419,11 +441,12 @@
             }, 800);
         } else {
             if (firstAttemptAtThisQuestion) {
-                stability = Math.max(0, stability - 2); 
-                stabText.innerText = stability;
                 firstAttemptAtThisQuestion = false;
+                // Stability still updates visually even if they failed the "first try" point
+                stability = Math.round((syncScore / currentQuestionSet.length) * 100);
+                stabText.innerText = stability;
             }
-            feedbackMsg.innerText = "✗ SYSTEM LOCK: -2% STABILITY"; feedbackMsg.className = "wrong";
+            feedbackMsg.innerText = "✗ SYSTEM LOCK: MISMATCH DETECTED"; feedbackMsg.className = "wrong";
             feedbackMsg.style.display = "block";
         }
     }
@@ -434,12 +457,32 @@
         if (currentQuestionIndex >= currentQuestionSet.length) arriving = true;
     }
 
-    function generateFinalCode() {
-        const modCode = document.getElementById('trainingModule').value.substring(0,3).toUpperCase();
-        const code = `${modCode}-${stability}-${syncScore}-${Math.random().toString(36).substring(7).toUpperCase()}`;
-        document.getElementById('generatedCodeDisplay').innerText = code;
-        document.getElementById('generatedCodeDisplay').style.display = 'block';
-        document.getElementById('genBtn').innerText = "COPY CODE FOR GFORM";
+    function processValidation() {
+        const modKey = document.getElementById('trainingModule').value.substring(0,3).toUpperCase();
+        const siteKey = document.getElementById('playerSite').value.includes("Quezon") ? "QC" : "GC";
+        const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+        
+        const completionCode = `${modKey}-${stability}-${syncScore}-${playerIDValue}-${randomHex}`;
+        
+        const display = document.getElementById('generatedCodeDisplay');
+        display.innerText = "SYNC TOKEN: " + completionCode;
+        display.style.display = 'block';
+        
+        const btn = document.getElementById('genBtn');
+        btn.innerText = "OPEN CLOUD FORM";
+        btn.style.background = "#2980b9";
+        
+        btn.onclick = function() {
+            const scriptURL = "https://script.google.com/macros/s/YOUR_APPSCRIPT_URL/exec";
+            const params = new URLSearchParams({
+                id: playerIDValue,
+                stab: stability,
+                sync: syncScore,
+                mod: modKey,
+                code: completionCode
+            });
+            window.open(`${scriptURL}?${params.toString()}`, '_blank');
+        };
     }
 
     function drawAmbulance() {
@@ -477,10 +520,12 @@
                 if (ambulance.y > 450) { ambulance.y -= 1.5; } 
                 else {
                     isPaused = true;
+                    // UPDATED MISSION ACCOMPLISHED DISPLAY
                     document.getElementById('finalStability').innerText = stability + "%";
-                    document.getElementById('finalSync').innerText = `SYSTEM SYNC: ${syncScore}/${currentQuestionSet.length}`;
+                    document.getElementById('finalSync').innerText = `${syncScore}/${currentQuestionSet.length}`;
                     document.getElementById('finalPlayerDisplay').innerText = "PLAYER ID: " + playerIDValue;
                     showScreen('screenResult');
+                    mainOverlay.style.display = 'flex';
                 }
             }
         } else {

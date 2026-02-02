@@ -184,7 +184,7 @@
             <p style="font-size: 11px; color: var(--warning-gold); font-weight: bold; margin-bottom: 5px;">🚨 FINAL STEP REQUIRED:</p>
             <p style="font-size: 11px; color: #eee; margin-bottom: 15px; width: 85%; line-height: 1.4;">
                 Click below to finalize your session. You will be redirected to the Validation Portal. <br>
-                <b>COPY the Unique Code</b> provided and <b>PASTE it into the Google Form</b> on that page.
+                <b>COPY the Unique Code</b> provided in the new window and <b>PASTE it into the Google Form</b> shown on that page.
             </p>
             
             <button id="genBtn" class="game-btn btn-green" onclick="processValidation()">VALIDATE & SYNC</button>
@@ -217,30 +217,32 @@
     let traffic = [];
     const keys = {};
 
-    // Input Listeners
+    // KEYBOARD INPUT
     window.addEventListener('keydown', e => keys[e.code] = true);
     window.addEventListener('keyup', e => keys[e.code] = false);
 
-    // Mobile Compatibility: Touch/Drag Support
+    // MOBILE TOUCH COMPATIBILITY (Dragging left/right)
     canvas.addEventListener('touchmove', (e) => {
         if (isPaused || arriving) return;
-        let rect = canvas.getBoundingClientRect();
-        let touchX = e.touches[0].clientX - rect.left;
-        let scaleX = canvas.width / rect.width;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        const scaleX = canvas.width / rect.width;
         ambulance.x = (touchX * scaleX) - (ambulance.w / 2);
+        
         // Boundaries
         if (ambulance.x < 15) ambulance.x = 15;
         if (ambulance.x > canvas.width - ambulance.w - 15) ambulance.x = canvas.width - ambulance.w - 15;
+        
         e.preventDefault();
     }, { passive: false });
 
     function getBriefingText() {
         return [
-            `"Connection established. <b>Hello Pilot ${playerIDValue}!</b> I am AMBO, your Clinical Outcome unit."`,
-            `"<b>CONTROLS:</b> Use the <b>Left/Right Arrow Keys</b> or <b>Drag on the screen</b> to move the ambulance."`,
+            `"System online. Connection established. <b>Hello, Pilot ${playerIDValue}!</b> I am AMBO, your Automated Module-Based Outcome unit."`,
+            `"<b>HOW TO MOVE:</b> Use the <b>Left/Right Arrow Keys</b> on your keyboard or <b>Drag the ambulance</b> to the left or right with your finger."`,
             `"Avoid collisions! Every impact results in a <b>-100m distance deduction</b>, delaying our arrival."`,
-            `"<b>THE SYNC STANDARD:</b> Only your <b>first choice</b> counts toward your Sync score. Accuracy maintains Stability."`,
-            `"Deploying to St. Luke's now. Stay alert!"`
+            `"<b>The Sync Standard:</b> Only the <b>first answer</b> you choose counts toward your System Sync score. Accuracy maintained stability."`,
+            `"Ready to deploy? Keep the data stream stable."`
         ];
     }
 
@@ -406,6 +408,7 @@
         storyPart = 0; showStoryPart(); showScreen('screenBriefing');
     }
 
+    let storyPart = 0;
     function showStoryPart() {
         const texts = getBriefingText();
         document.getElementById('storyContent').innerHTML = texts[storyPart];
@@ -529,12 +532,13 @@
                 }
             }
         } else {
-            // PC Controls
+            // PC CONTROLS
             if (keys['ArrowLeft'] && ambulance.x > 15) ambulance.x -= ambulance.speed;
             if (keys['ArrowRight'] && ambulance.x < canvas.width - ambulance.w - 15) ambulance.x += ambulance.speed;
             
             distance += 4; roadOffset += 12;
             
+            // CHECKPOINT TRIGGER: 1000m
             if (distance >= nextMilestone && currentQuestionIndex < currentQuestionSet.length) triggerCheckpoint();
             
             spawnTimer++;
@@ -546,6 +550,7 @@
             for (let i = traffic.length-1; i >= 0; i--) {
                 traffic[i].y += traffic[i].speed;
                 if (ambulance.x < traffic[i].x + traffic[i].w && ambulance.x + ambulance.w > traffic[i].x && ambulance.y < traffic[i].y + traffic[i].h && ambulance.y + ambulance.h > traffic[i].y) {
+                    // Impact Penalty
                     distance = Math.max(0, distance - 100); traffic.splice(i, 1);
                 } else if (traffic[i].y > canvas.height) traffic.splice(i, 1);
             }

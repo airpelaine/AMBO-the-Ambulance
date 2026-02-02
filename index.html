@@ -122,7 +122,7 @@
         <div id="screenStart" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
             <div class="ambo-avatar"><div class="siren-light"></div></div>
             <h1 style="margin: 0; color: #fff; font-size: 28px;">🚑 AMBO</h1>
-            <p style="color: var(--warning-gold); font-size: 11px; letter-spacing: 1px; margin-bottom: 30px;">Automated Module-Based Outcome for NTCP</p>
+            <p style="color: var(--warning-gold); font-size: 11px; letter-spacing: 1px; margin-bottom: 30px;">Automated Module-Based Outcome</p>
             <button class="game-btn btn-green" onclick="showScreen('screenDetails')">START MISSION</button>
         </div>
 
@@ -181,9 +181,11 @@
                 </div>
             </div>
 
-            <p style="font-size: 11px; color: #888; margin-bottom: 15px; width: 80%;">Click below to validate your credentials and generate your sync token.</p>
-            
-            <div id="generatedCodeDisplay" style="background: #222; padding: 12px; border-radius: 8px; font-family: monospace; color: var(--primary-blue); font-size: 13px; margin-bottom: 15px; display: none; width: 85%; border: 1px solid #444; word-break: break-all;"></div>
+            <p style="font-size: 11px; color: var(--warning-gold); font-weight: bold; margin-bottom: 5px;">🚨 FINAL STEP REQUIRED:</p>
+            <p style="font-size: 11px; color: #eee; margin-bottom: 15px; width: 85%; line-height: 1.4;">
+                Click below to finalize your session. You will be redirected to the Validation Portal. <br>
+                <b>COPY the Unique Code</b> provided in the new window and <b>PASTE it into the Google Form</b> shown on that page.
+            </p>
             
             <button id="genBtn" class="game-btn btn-green" onclick="processValidation()">VALIDATE & SYNC</button>
         </div>
@@ -423,12 +425,11 @@
     function handleAnswer(idx) {
         const correct = currentQuestionSet[currentQuestionIndex].correct;
         if (idx === correct) {
-            if (firstAttemptAtThisQuestion) {
-                syncScore++;
-            }
+            if (firstAttemptAtThisQuestion) { syncScore++; }
             feedbackMsg.innerText = "✓ DATA VALIDATED"; feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
             
+            // Accuracy based Stability Calculation
             stability = Math.round((syncScore / currentQuestionSet.length) * 100);
             stabText.innerText = stability;
 
@@ -459,28 +460,19 @@
         const modKey = document.getElementById('trainingModule').value.substring(0,3).toUpperCase();
         const siteKey = document.getElementById('playerSite').value.includes("Quezon") ? "QC" : "GC";
         const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
-        
         const completionCode = `${modKey}-${stability}-${syncScore}-${playerIDValue}-${randomHex}`;
         
-        const display = document.getElementById('generatedCodeDisplay');
-        display.innerText = "SYNC TOKEN: " + completionCode;
-        display.style.display = 'block';
+        const scriptURL = "https://script.google.com/a/macros/stlukes.com.ph/s/AKfycbx0JeghEWyuvz1azyCVnIn-PeVrjvTYCQ9lWmNccdoDBa0RDiUu6ZXUjDFY37BtZg6c3w/exec";
+        const params = new URLSearchParams({
+            code: completionCode,
+            id: playerIDValue,
+            site: siteKey,
+            stab: stability,
+            sync: syncScore,
+            mod: modKey
+        });
         
-        const btn = document.getElementById('genBtn');
-        btn.innerText = "OPEN CLOUD FORM";
-        btn.style.background = "#2980b9";
-        
-        btn.onclick = function() {
-            const scriptURL = "https://script.google.com/macros/s/YOUR_APPSCRIPT_URL/exec";
-            const params = new URLSearchParams({
-                id: playerIDValue,
-                stab: stability,
-                sync: syncScore,
-                mod: modKey,
-                code: completionCode
-            });
-            window.open(`${scriptURL}?${params.toString()}`, '_blank');
-        };
+        window.open(`${scriptURL}?${params.toString()}`, '_blank');
     }
 
     function drawAmbulance() {
@@ -512,9 +504,8 @@
         if (isPaused || !gameStarted || inQuiz) return;
         if (arriving) {
             traffic = [];
-            if (hospitalY < 20) {
-                hospitalY += 3; roadOffset += 4;
-            } else {
+            if (hospitalY < 20) { hospitalY += 3; roadOffset += 4; } 
+            else {
                 if (ambulance.y > 450) { ambulance.y -= 1.5; } 
                 else {
                     isPaused = true;
@@ -529,7 +520,10 @@
             if (keys['ArrowLeft'] && ambulance.x > 15) ambulance.x -= ambulance.speed;
             if (keys['ArrowRight'] && ambulance.x < canvas.width - ambulance.w - 15) ambulance.x += ambulance.speed;
             distance += 4; roadOffset += 12;
+            
+            // TRIGGERS EVERY 1000M
             if (distance >= nextMilestone && currentQuestionIndex < currentQuestionSet.length) triggerCheckpoint();
+            
             spawnTimer++;
             if (spawnTimer > 40) {
                 const colors = ['#f39c12', '#8e44ad', '#27ae60', '#d35400'];
@@ -539,7 +533,7 @@
             for (let i = traffic.length-1; i >= 0; i--) {
                 traffic[i].y += traffic[i].speed;
                 if (ambulance.x < traffic[i].x + traffic[i].w && ambulance.x + ambulance.w > traffic[i].x && ambulance.y < traffic[i].y + traffic[i].h && ambulance.y + ambulance.h > traffic[i].y) {
-                    // Collision Penalty: -100m
+                    // Collision deduction
                     distance = Math.max(0, distance - 100); traffic.splice(i, 1);
                 } else if (traffic[i].y > canvas.height) traffic.splice(i, 1);
             }

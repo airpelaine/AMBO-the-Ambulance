@@ -135,6 +135,7 @@
                     <option value="ambulatory">Ambulatory Care</option>
                     <option value="basic">Basic Navigation</option>
                     <option value="acute">Acute/Surgical Care</option>
+                    <option value="shiftmanager">Shift Manager Roles</option>
                 </select>
             </div>
             <div class="form-group">
@@ -217,29 +218,24 @@
     let traffic = [];
     const keys = {};
 
-    // KEYBOARD INPUT
     window.addEventListener('keydown', e => keys[e.code] = true);
     window.addEventListener('keyup', e => keys[e.code] = false);
 
-    // MOBILE TOUCH COMPATIBILITY (Dragging left/right)
     canvas.addEventListener('touchmove', (e) => {
         if (isPaused || arriving) return;
         const rect = canvas.getBoundingClientRect();
         const touchX = e.touches[0].clientX - rect.left;
         const scaleX = canvas.width / rect.width;
         ambulance.x = (touchX * scaleX) - (ambulance.w / 2);
-        
-        // Boundaries
         if (ambulance.x < 15) ambulance.x = 15;
         if (ambulance.x > canvas.width - ambulance.w - 15) ambulance.x = canvas.width - ambulance.w - 15;
-        
         e.preventDefault();
     }, { passive: false });
 
     function getBriefingText() {
         return [
             `"System online. Connection established. <b>Hello, Pilot ${playerIDValue}!</b> I am AMBO, your Automated Module-Based Outcome unit."`,
-            `"<b>HOW TO MOVE:</b> Use the <b>Left/Right Arrow Keys</b> on your keyboard or <b>Drag the ambulance</b> to the left or right with your finger."`,
+            `"<b>HOW TO MOVE:</b> Use the <b>Left/Right Arrow Keys</b> or <b>Drag the ambulance</b> left or right."`,
             `"Avoid collisions! Every impact results in a <b>-100m distance deduction</b>, delaying our arrival."`,
             `"<b>The Sync Standard:</b> Only the <b>first answer</b> you choose counts toward your System Sync score. Accuracy maintained stability."`,
             `"Ready to deploy? Keep the data stream stable."`
@@ -389,6 +385,38 @@
             { q: "iPro unavailable BCP for anesthesiologist?", a: ["PARES", "PreOp Note", "PAC", "I/O Sheet"], correct: 0 },
             { q: "Downtime document to request item/med/procedure?", a: ["Credit Memo", "Fee Slip", "Turn-In Slip", "Patient Account Charge"], correct: 2 },
             { q: "NOT retained as paper-based form?", a: ["Discharge Checklist", "CMRN", "Anesthesia Cart Checklist", "None of the above"], correct: 3 }
+        ],
+        shiftmanager: [
+            { q: "Which of the following is a primary responsibility of the Shift Manager regarding data protection?", a: ["Creating passwords for bedside nurses", "Sharing administrative passwords with secretaries", "Reporting suspected password compromises", "Storing passwords in unencrypted mobile files for quick access"], correct: 2 },
+            { q: "To gain EMR access, which form must be processed by the Shift Manager/Associate?", a: ["Systems Access Request Form (SARF)", "Medication Reconciliation Form", "Password Modification Sheet", "Patient Flow Request"], correct: 0 },
+            { q: "Regarding password security, Shift Managers are prohibited from:", a: ["Using non-English passphrases", "Using the 'Remember Password' feature on web browsers", "Using multi-factor authentication", "Creating passwords with more than 14 characters"], correct: 1 },
+            { q: "Who has the primary responsibility for watching out for new available Critical Results on the Tracking Board?", a: ["The Bedside Nurse", "The unit's Charge Nurse or Shift Manager", "The Attending Physician", "The Pathology Department staff"], correct: 1 },
+            { q: "What must the Shift Manager do after relaying critical results to a physician?", a: ["Delete the Lab icon from the Tracking Board", "Print a paper copy for the patient’s chart", "Click 'Annotate' and type the name of the informed physician", "Call the Pathology department to confirm receipt"], correct: 2 },
+            { q: "Which tool is used by the Shift Manager to monitor and manage tasks that need to be performed for a patient?", a: ["MD Portal", "Worklist Manager", "Clinical Summary", "Systems Access Request"], correct: 1 },
+            { q: "In the admission process for Direct Admissions, which department enters the 'Admit Patient' order and assigns the bed?", a: ["Nursing Unit", "Admissions Department", "Medical Records", "Information Technology"], correct: 1 },
+            { q: "When transcribing admission orders, what is the role of the Nursing Unit?", a: ["Perform Admission Medication Reconciliation", "Transcribe orders with 'Standard Order Session Type'", "Assign the patient's actual bed location", "Removal of ER MD tagging"], correct: 1 },
+            { q: "For multiple time-critical laboratory orders (e.g., CBC NOW), what is the correct responsibility?", a: ["Encode all repeat orders into the special instructions box", "Encode and submit each order separately with specific collection times", "Wait for the MD to encode all time-sensitive requests", "Combine all laboratory requests into a single order set"], correct: 1 },
+            { q: "What is the Shift Manager’s responsibility regarding Medication History collection?", a: ["Collect the history manually for every patient", "Ensure Bedside RNs have accomplished Admission Order Reconciliation", "Mark all medication history as 'Done' immediately upon arrival", "Review documented allergies within 24 hours"], correct: 1 },
+            { q: "How long does the MD have to review allergies before the system prevents new orders from being entered?", a: ["2 hours", "4 hours", "8 hours", "12 hours"], correct: 2 },
+            { q: "When encoding admission orders, which task is specifically assigned to the Physician (MD)?", a: ["Documenting vital signs monitoring", "Recording isolation orders (e.g., Contact, Droplet)", "Marking allergies as 'Reviewed'", "Printing door tags"], correct: 2 },
+            { q: "In the ER Admission process, what is the responsibility of the Nursing Unit?", a: ["Remove the ER MD from the system", "Change the 'Assigned Location' once the patient arrives", "Phone endorsement to the Admissions department", "Enter the initial Admit Order"], correct: 1 },
+            { q: "In a Permanent Transfer (Trans-in/Trans-out), which unit is responsible for transferring the patient's location?", a: ["The Sending Unit", "The Receiving Unit", "The Admissions Department", "The Information Technology Group"], correct: 1 },
+            { q: "To perform a 'First Dose Check' in EMR, where does the Shift Manager add the comment?", a: ["In the Orders Tab", "In the Worklist Manager", "In the Clinical Summary", "In the Patient Info Tab"], correct: 1 },
+            { q: "Whose account must be used when stamping a 'First Dose Check' in the system?", a: ["The Nursing Unit Manager's account", "The Bedside Nurse's account", "The Charge Nurse/Shift Manager’s own account", "A generic unit account"], correct: 2 },
+            { q: "What is the Shift Manager's role during High Alert Medication administration?", a: ["Provide verbal consent", "Act as a witness and complete the Co-sign window", "Enter the initial medication order for the physician", "Schedule the task in the Worklist Manager only"], correct: 1 },
+            { q: "When a patient is NPO, the Shift Manager's role is to:", a: ["Delete all medication orders", "Suspend oral medications in the pre-operative phase", "Change the medication route to IV automatically", "Wait for the physician to reconcile the orders"], correct: 1 },
+            { q: "To cancel batching during the discharge workflow, medication suspension should be done:", a: ["After the patient is physically gone", "Before 1100H", "At the end of every shift", "Only if requested by Pharmacy"], correct: 1 },
+            { q: "What is the frequency for Shift Managers to mark pipe-in oxygen usage as 'done' for auto-charging?", a: ["Every hour", "Once every 24 hours", "Every end of shift", "Only upon patient discharge"], correct: 2 },
+            { q: "Shift Managers check Pharmacy Issuance and Medication Returns through which tab?", a: ["Results", "Patient Info", "Clinical Summary", "Tracking Board"], correct: 2 },
+            { q: "Which EMR status removes a patient from the Tracking Board during discharge?", a: ["Ready for Billing", "Discharge Visit", "Pending Transactions", "Core Discharge"], correct: 1 },
+            { q: "If a patient is expired, the Shift Manager must transfer the patient's location to:", a: ["The lobby", "The admissions department", "Surgical Pathology", " 'Out on Pass' status"], correct: 2 },
+            { q: "Who is responsible for reconciling discharge orders?", a: ["The Shift Manager for all orders", "The Billing Department", "Each specific service for the orders they requested", "The Nursing Unit Manager"], correct: 2 },
+            { q: "To extract all prescriptions for a patient during discharge, what should be entered in the Selection Criteria?", a: ["THE DOCTOR'S NAME", "THE PATIENT'S PIN", " 'ALL' ", " 'DISCHARGE' "], correct: 2 },
+            { q: "In the event payment is done but the patient is still in the unit, the Shift Manager should:", a: ["Keep the discharge visit as is", "Cancel the Discharge Visit through 'Visit Maintenance'", "Physically move the patient to the lobby", "Re-admit the patient through the ER"], correct: 1 },
+            { q: "What tool is used to request housekeeping or medical equipment repair?", a: ["Worklist Manager", "Patient Flow", "Tracking Board", "CEAC"], correct: 1 },
+            { q: "What is the standard Shift Manager responsibility regarding the Hand-off Process?", a: ["Relaying complete and up-to-date information interactively", "Recording information only via email", "Allowing interruptions to ensure bedside nurses are busy", "Using only the Tracking Board for endorsements"], correct: 0 },
+            { q: "Which department must be removing the ER MD tagging before a patient arrives at the unit?", a: ["Admissions Department", "Nursing Unit", "Emergency Department", "Billing Department"], correct: 2 },
+            { q: "Regarding 'Leave of Absence (Out on Pass),' the Shift Manager must:", a: ["Discharge the patient completely", "Change the visit status to LOA", "Permanently transfer the patient to 'General' scope", "Cancel all laboratory orders"], correct: 1 }
         ]
     };
 
@@ -408,7 +436,6 @@
         storyPart = 0; showStoryPart(); showScreen('screenBriefing');
     }
 
-    let storyPart = 0;
     function showStoryPart() {
         const texts = getBriefingText();
         document.getElementById('storyContent').innerHTML = texts[storyPart];
@@ -444,10 +471,8 @@
             if (firstAttemptAtThisQuestion) { syncScore++; }
             feedbackMsg.innerText = "✓ DATA VALIDATED"; feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
-            
             stability = Math.round((syncScore / currentQuestionSet.length) * 100);
             stabText.innerText = stability;
-
             currentQuestionIndex++; batchCount++;
             setTimeout(() => {
                 feedbackMsg.style.display = "none";
@@ -476,17 +501,8 @@
         const siteKey = document.getElementById('playerSite').value.includes("Quezon") ? "QC" : "GC";
         const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
         const completionCode = `${modKey}-${stability}-${syncScore}-${playerIDValue}-${randomHex}`;
-        
         const scriptURL = "https://script.google.com/a/macros/stlukes.com.ph/s/AKfycbx0JeghEWyuvz1azyCVnIn-PeVrjvTYCQ9lWmNccdoDBa0RDiUu6ZXUjDFY37BtZg6c3w/exec";
-        const params = new URLSearchParams({
-            code: completionCode,
-            id: playerIDValue,
-            site: siteKey,
-            stab: stability,
-            sync: syncScore,
-            mod: modKey
-        });
-        
+        const params = new URLSearchParams({ code: completionCode, id: playerIDValue, site: siteKey, stab: stability, sync: syncScore, mod: modKey });
         window.open(`${scriptURL}?${params.toString()}`, '_blank');
     }
 
@@ -532,15 +548,10 @@
                 }
             }
         } else {
-            // PC CONTROLS
             if (keys['ArrowLeft'] && ambulance.x > 15) ambulance.x -= ambulance.speed;
             if (keys['ArrowRight'] && ambulance.x < canvas.width - ambulance.w - 15) ambulance.x += ambulance.speed;
-            
             distance += 4; roadOffset += 12;
-            
-            // CHECKPOINT TRIGGER: 1000m
             if (distance >= nextMilestone && currentQuestionIndex < currentQuestionSet.length) triggerCheckpoint();
-            
             spawnTimer++;
             if (spawnTimer > 40) {
                 const colors = ['#f39c12', '#8e44ad', '#27ae60', '#d35400'];
@@ -550,7 +561,6 @@
             for (let i = traffic.length-1; i >= 0; i--) {
                 traffic[i].y += traffic[i].speed;
                 if (ambulance.x < traffic[i].x + traffic[i].w && ambulance.x + ambulance.w > traffic[i].x && ambulance.y < traffic[i].y + traffic[i].h && ambulance.y + ambulance.h > traffic[i].y) {
-                    // Impact Penalty
                     distance = Math.max(0, distance - 100); traffic.splice(i, 1);
                 } else if (traffic[i].y > canvas.height) traffic.splice(i, 1);
             }

@@ -112,7 +112,7 @@
     </div>
 
     <div class="stats-bar">
-        <div class="stat-item stat-red">💓 STABILITY: <span id="stabilityDisplay">100</span>%</div>
+        <div class="stat-item stat-red">💓 STABILITY: <span id="stabilityDisplay">0</span>%</div>
         <div class="stat-item stat-blue">🏁 <span id="dist">0</span>m</div>
     </div>
     
@@ -173,7 +173,7 @@
                 <div id="finalPlayerDisplay" style="color: var(--primary-blue); font-size: 16px; font-weight: bold; margin-bottom: 10px;">ID: ---</div>
                 <div style="display: flex; justify-content: space-around;">
                     <div>
-                        <div id="finalStability" style="font-size: 32px; font-weight: bold; color: #fff;">100%</div>
+                        <div id="finalStability" style="font-size: 32px; font-weight: bold; color: #fff;">0%</div>
                         <p style="font-size: 9px; color: #aaa; margin:0;">STABILITY</p>
                     </div>
                     <div>
@@ -208,7 +208,7 @@
           mainOverlay = document.getElementById('mainOverlay'), 
           feedbackMsg = document.getElementById('feedbackMsg');
 
-    let distance = 0, stability = 100, currentQuestionIndex = 0, syncScore = 0;
+    let distance = 0, stability = 0, currentQuestionIndex = 0, syncScore = 0;
     let isPaused = true, inQuiz = false, gameStarted = false, arriving = false;
     let roadOffset = 0, spawnTimer = 0, batchCount = 0, hospitalY = -600;
     let nextMilestone = 1000, firstAttemptAtThisQuestion = true;
@@ -238,7 +238,7 @@
             `"System online. Connection established. <b>Hello, Pilot ${playerIDValue}!</b> I am AMBO, your Automated Module-Based Outcome unit."`,
             `"<b>HOW TO MOVE:</b> Use the <b>Left/Right Arrow Keys</b> or <b>Drag the ambulance</b> left or right."`,
             `"Avoid collisions! Every impact results in a <b>-100m distance deduction</b>, delaying our arrival."`,
-            `"<b>The Sync Standard:</b> Only the <b>first answer</b> you choose counts toward your System Sync score. Accuracy maintained stability."`,
+            `"<b>The Sync Standard:</b> Only the <b>first answer</b> you choose counts toward your System Sync score."`,
             `"Ready to deploy? Keep the data stream stable."`
         ];
     }
@@ -503,8 +503,11 @@
             if (firstAttemptAtThisQuestion) { syncScore++; }
             feedbackMsg.innerText = "✓ DATA VALIDATED"; feedbackMsg.className = "correct";
             feedbackMsg.style.display = "block";
+            
+            // Revised Stability Calculation: Based on percentage of System Sync Score
             stability = Math.round((syncScore / currentQuestionSet.length) * 100);
             stabText.innerText = stability;
+            
             currentQuestionIndex++; batchCount++;
             setTimeout(() => {
                 feedbackMsg.style.display = "none";
@@ -514,6 +517,7 @@
         } else {
             if (firstAttemptAtThisQuestion) {
                 firstAttemptAtThisQuestion = false;
+                // Stability still needs updating even on wrong answer to reflect the current possible max sync
                 stability = Math.round((syncScore / currentQuestionSet.length) * 100);
                 stabText.innerText = stability;
             }
